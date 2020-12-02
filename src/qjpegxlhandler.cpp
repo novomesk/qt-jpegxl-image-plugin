@@ -312,31 +312,39 @@ bool QJpegXLHandler::write(const QImage &image)
     }
 
 
-    JxlFrameFormat frameformat;
+    JxlPixelFormat pixel_format;
     QImage::Format tmpformat;
     JxlEncoderStatus status;
     size_t buffer_size;
 
-    frameformat.pixel_format.data_type = JXL_TYPE_UINT8;
-    frameformat.pixel_format.endianness = JXL_NATIVE_ENDIAN;
-    frameformat.pixel_format.align = 1;
+    pixel_format.data_type = JXL_TYPE_UINT8;
+    pixel_format.endianness = JXL_NATIVE_ENDIAN;
+    pixel_format.align = 1;
 
     if (image.hasAlphaChannel()) {
         tmpformat = QImage::Format_RGBA8888;
-        frameformat.pixel_format.num_channels = 4;
+        pixel_format.num_channels = 4;
     } else {
         tmpformat = QImage::Format_RGB888;
-        frameformat.pixel_format.num_channels = 3;
+        pixel_format.num_channels = 3;
     }
 
     const QImage tmpimage = image.convertToFormat(tmpformat);
-    frameformat.xsize = tmpimage.width();
-    frameformat.ysize = tmpimage.height();
+    const size_t xsize = tmpimage.width();
+    const size_t ysize = tmpimage.height();
 
-    buffer_size = frameformat.pixel_format.num_channels;
-    buffer_size = buffer_size * frameformat.xsize * frameformat.ysize;
+    buffer_size = pixel_format.num_channels;
+    buffer_size = buffer_size * xsize * ysize;
 
-    status = JxlEncoderAddImageFrame(encoder, &frameformat, (void *)tmpimage.constBits(), buffer_size);
+    status = JxlEncoderSetDimensions(encoder, xsize, ysize);
+    if (status != JXL_ENC_SUCCESS) {
+        qWarning("JxlEncoderSetDimensions failed!");
+        JxlThreadParallelRunnerDestroy(runner);
+        JxlEncoderDestroy(encoder);
+        return false;
+    }
+
+    status = JxlEncoderAddImageFrame(encoder, &pixel_format, (void *)tmpimage.constBits(), buffer_size);
     if (status == JXL_ENC_ERROR) {
         qWarning("JxlEncoderAddImageFrame failed!");
         JxlThreadParallelRunnerDestroy(runner);
