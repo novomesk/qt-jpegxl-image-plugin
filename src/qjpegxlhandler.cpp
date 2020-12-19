@@ -115,7 +115,7 @@ bool QJpegXLHandler::ensureDecoder()
     JxlDecoderStatus status;
 
     status = JxlDecoderSubscribeEvents(m_decoder,
-                                       JXL_DEC_BASIC_INFO | JXL_DEC_EXTENSIONS | JXL_DEC_ANIMATION_FRAME |
+                                       JXL_DEC_BASIC_INFO | JXL_DEC_EXTENSIONS | JXL_DEC_FRAME |
                                        JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE);
     if (status == JXL_DEC_ERROR) {
         qWarning("ERROR: JxlDecoderSubscribeEvents failed");
@@ -192,13 +192,7 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
-    status = JxlDecoderSetImageOutBuffer(m_decoder, &pixel_format, result.bits(), result_size);
-    if (status != JXL_DEC_SUCCESS) {
-        qWarning("ERROR: JxlDecoderSetImageOutBuffer failed");
-        m_parseState = ParseJpegXLError;
-        return false;
-    }
-
+    JxlFrameHeader frame_header;
 
     do {
         status = JxlDecoderProcessInput(m_decoder, &buffer_remaining, &length_remaining);
@@ -214,9 +208,21 @@ bool QJpegXLHandler::ensureDecoder()
             m_parseState = ParseJpegXLError;
             return false;
             break;
-        case JXL_DEC_ANIMATION_FRAME:
-            qWarning("animation header");
-            //JxlDecoderGetAnimationFrameHeader(m_decoder, &m_animation_frame_header);
+        case JXL_DEC_NEED_IMAGE_OUT_BUFFER:
+            if (JxlDecoderSetImageOutBuffer(m_decoder, &pixel_format, result.bits(), result_size) != JXL_DEC_SUCCESS) {
+                qWarning("ERROR: JxlDecoderSetImageOutBuffer failed");
+                m_parseState = ParseJpegXLError;
+                return false;
+            }
+            break;
+        case JXL_DEC_FRAME:
+            qWarning("Beginning of a frame.");
+
+            if (JxlDecoderGetFrameHeader(m_decoder, &frame_header) != JXL_DEC_SUCCESS) {
+                qWarning("ERROR: JxlDecoderGetFrameHeader failed");
+                m_parseState = ParseJpegXLError;
+                return false;
+            }
             break;
         case JXL_DEC_COLOR_ENCODING:
             qWarning("color profile available");
@@ -311,6 +317,7 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
+    JxlEncoderOptions *encoder_options = JxlEncoderOptionsCreate(encoder, NULL);
 
     JxlPixelFormat pixel_format;
     QImage::Format tmpformat;
@@ -344,7 +351,7 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
-    status = JxlEncoderAddImageFrame(encoder, &pixel_format, (void *)tmpimage.constBits(), buffer_size);
+    status = JxlEncoderAddImageFrame(encoder_options, &pixel_format, (void *)tmpimage.constBits(), buffer_size);
     if (status == JXL_ENC_ERROR) {
         qWarning("JxlEncoderAddImageFrame failed!");
         JxlThreadParallelRunnerDestroy(runner);

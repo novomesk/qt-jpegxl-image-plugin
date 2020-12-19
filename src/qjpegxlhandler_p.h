@@ -55,7 +55,6 @@ private:
   JxlDecoder *m_decoder;
   void *m_runner;
   JxlBasicInfo m_basicinfo;
-  JxlAnimationFrameHeader m_animation_frame_header;
 
   QImage        m_current_image;
 
