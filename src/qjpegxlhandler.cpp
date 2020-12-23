@@ -9,9 +9,7 @@
 #include <QtGlobal>
 #include <QThread>
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
 #include <QColorSpace>
-#endif
 
 #include "qjpegxlhandler_p.h"
 #include <jxl/encode.h>
@@ -20,11 +18,10 @@
 QJpegXLHandler::QJpegXLHandler() :
     m_parseState(ParseJpegXLNotParsed),
     m_quality(52),
-    m_container_width(0),
-    m_container_height(0),
+    m_currentimage_index(0),
     m_decoder(nullptr),
     m_runner(nullptr),
-    m_must_jump_to_next_image(false)
+    m_next_image_delay(0)
 {
 }
 
@@ -185,14 +182,9 @@ bool QJpegXLHandler::ensureDecoder()
 
     result_size = result_size * m_basicinfo.xsize * m_basicinfo.ysize;
 
-    QImage result(m_basicinfo.xsize, m_basicinfo.ysize, resultformat);
-    if (result.isNull()) {
-        qWarning("Memory cannot be allocated");
-        m_parseState = ParseJpegXLError;
-        return false;
-    }
-
+    QColorSpace colorspace;
     JxlFrameHeader frame_header;
+    int delay = 0;
 
     do {
         status = JxlDecoderProcessInput(m_decoder, &buffer_remaining, &length_remaining);
@@ -209,10 +201,27 @@ bool QJpegXLHandler::ensureDecoder()
             return false;
             break;
         case JXL_DEC_NEED_IMAGE_OUT_BUFFER:
-            if (JxlDecoderSetImageOutBuffer(m_decoder, &pixel_format, result.bits(), result_size) != JXL_DEC_SUCCESS) {
+            m_frames.append(QPair(QImage(m_basicinfo.xsize, m_basicinfo.ysize, resultformat), delay));
+            if (m_frames.last().first.isNull()) {
+                qWarning("Memory cannot be allocated");
+                m_parseState = ParseJpegXLError;
+                return false;
+            }
+            if (colorspace.isValid()) {
+                m_frames.last().first.setColorSpace(colorspace);
+            }
+            if (JxlDecoderSetImageOutBuffer(m_decoder, &pixel_format, m_frames.last().first.bits(), result_size) != JXL_DEC_SUCCESS) {
                 qWarning("ERROR: JxlDecoderSetImageOutBuffer failed");
                 m_parseState = ParseJpegXLError;
                 return false;
+            }
+            break;
+        case JXL_DEC_FULL_IMAGE:
+            qWarning("full image");
+            if (loadalpha) {
+                m_frames.last().first = m_frames.last().first.convertToFormat(QImage::Format_ARGB32);
+            } else {
+                m_frames.last().first = m_frames.last().first.convertToFormat(QImage::Format_RGB32);
             }
             break;
         case JXL_DEC_FRAME:
@@ -223,6 +232,12 @@ bool QJpegXLHandler::ensureDecoder()
                 m_parseState = ParseJpegXLError;
                 return false;
             }
+
+            if (m_basicinfo.have_animation) {
+                if (m_basicinfo.animation.tps_denominator > 0 && m_basicinfo.animation.tps_numerator > 0) {
+                    delay = (int)(0.5 + 1000.0 * frame_header.duration * m_basicinfo.animation.tps_denominator / m_basicinfo.animation.tps_numerator);
+                }
+            }
             break;
         case JXL_DEC_COLOR_ENCODING:
             qWarning("color profile available");
@@ -232,9 +247,9 @@ bool QJpegXLHandler::ensureDecoder()
                     if (icc_size > 0) {
                         QByteArray icc_data(icc_size, 0);
                         if (JxlDecoderGetColorAsICCProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, (uint8_t *)icc_data.data(), icc_data.size()) == JXL_DEC_SUCCESS) {
-                            result.setColorSpace(QColorSpace::fromIccProfile(icc_data));
+                            colorspace = QColorSpace::fromIccProfile(icc_data);
 
-                            if (!result.colorSpace().isValid()) {
+                            if (!colorspace.isValid()) {
                                 qWarning("invalid color profile created");
                             }
                         } else {
@@ -248,29 +263,24 @@ bool QJpegXLHandler::ensureDecoder()
                 }
             }
             break;
+        case JXL_DEC_SUCCESS:
+            //do nothing, everything OK
+            break;
         default:
             qWarning("event %d", status);
             break;
         }
     } while (status != JXL_DEC_SUCCESS);
 
-    if (loadalpha) {
-        m_current_image = result.convertToFormat(QImage::Format_ARGB32);
-    } else {
-        m_current_image = result.convertToFormat(QImage::Format_RGB32);
-    }
-    m_parseState = ParseJpegXLSuccess;
-    return true;
-}
-
-bool QJpegXLHandler::decode_one_frame()
-{
-    if (!ensureParsed()) {
+    if (m_frames.isEmpty()) {
+        qWarning("no frames loaded by JXL plug-in");
+        m_parseState = ParseJpegXLError;
         return false;
     }
 
+    m_next_image_delay = m_frames.first().second;
 
-    m_must_jump_to_next_image = false;
+    m_parseState = ParseJpegXLSuccess;
     return true;
 }
 
@@ -280,13 +290,12 @@ bool QJpegXLHandler::read(QImage *image)
         return false;
     }
 
-    if (m_must_jump_to_next_image) {
-        jumpToNextImage();
-    }
+    const QPair<QImage, int>  &currentimage = m_frames.at(m_currentimage_index);
+    *image = currentimage.first;
+    m_next_image_delay = currentimage.second;
 
-    *image = m_current_image;
     if (imageCount() >= 2) {
-        m_must_jump_to_next_image = true;
+        jumpToNextImage();
     }
     return true;
 }
@@ -383,7 +392,7 @@ bool QJpegXLHandler::write(const QImage &image)
     JxlThreadParallelRunnerDestroy(runner);
     JxlEncoderDestroy(encoder);
 
-    compressed.resize(next_out -  compressed.data());
+    compressed.resize(next_out - compressed.data());
 
     if (compressed.size() > 0) {
         qint64 write_status = device()->write((const char *)compressed.data(), compressed.size());
@@ -409,9 +418,9 @@ QVariant QJpegXLHandler::option(ImageOption option) const
     case Quality:
         return m_quality;
     case Size:
-        return m_current_image.size();
+        return QSize(m_basicinfo.xsize, m_basicinfo.ysize);
     case Animation:
-        if (imageCount() >= 2) {
+        if (m_basicinfo.have_animation && imageCount() >= 2) {
             return true;
         } else {
             return false;
@@ -451,9 +460,9 @@ int QJpegXLHandler::imageCount() const
         return 0;
     }
 
-//    if (m_decoder->imageCount >= 1) {
-//        return m_decoder->imageCount;
-//    }
+    if (!m_frames.isEmpty()) {
+        return m_frames.count();
+    }
     return 0;
 }
 
@@ -467,7 +476,7 @@ int QJpegXLHandler::currentImageNumber() const
         return 0;
     }
 
-//    return m_decoder->imageIndex;
+    return m_currentimage_index;
     return 0;
 }
 
@@ -477,19 +486,19 @@ bool QJpegXLHandler::jumpToNextImage()
         return false;
     }
 
-//    if (m_decoder->imageCount < 2) {
-//        return true;
-//    }
-
-
-
-    if (decode_one_frame()) {
+    if (imageCount() < 2) {
         return true;
-    } else {
-        m_parseState = ParseJpegXLError;
-        return false;
     }
 
+    int next_image_index = m_currentimage_index + 1;
+
+    if (next_image_index >= imageCount() || next_image_index < 0) {
+        m_currentimage_index = 0;
+    } else {
+        m_currentimage_index = next_image_index;
+    }
+
+    return true;
 }
 
 bool QJpegXLHandler::jumpToImage(int imageNumber)
@@ -498,10 +507,10 @@ bool QJpegXLHandler::jumpToImage(int imageNumber)
         return false;
     }
 
-    if (decode_one_frame()) {
+    if (imageNumber >= 0 && imageNumber < imageCount()) {
+        m_currentimage_index = imageNumber;
         return true;
     } else {
-        m_parseState = ParseJpegXLError;
         return false;
     }
 }
@@ -512,15 +521,11 @@ int QJpegXLHandler::nextImageDelay() const
         return 0;
     }
 
-//    if (m_decoder->imageCount < 2) {
-//        return 0;
-//    }
-
-    int delay_ms = 1000.0 /** m_decoder->imageTiming.duration*/;
-    if (delay_ms < 1) {
-        delay_ms = 1;
+    if (imageCount() < 2) {
+        return 0;
     }
-    return delay_ms;
+
+    return m_next_image_delay;
 }
 
 int QJpegXLHandler::loopCount() const
@@ -529,9 +534,9 @@ int QJpegXLHandler::loopCount() const
         return 0;
     }
 
-//    if (m_decoder->imageCount < 2) {
-//        return 0;
-//    }
-
-    return 1;
+    if (m_basicinfo.have_animation) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
