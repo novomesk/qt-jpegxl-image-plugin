@@ -23,7 +23,7 @@ git clone https://gitlab.com/wg1/jpeg-xl.git --recursive
 cd jpeg-xl
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
+cmake -DCMAKE_BUILD_TYPE=Release -DJPEGXL_ENABLE_PLUGINS=ON -DBUILD_TESTING=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DJPEGXL_ENABLE_SJPEG=OFF ..
 cmake --build . -- -j
 sudo make install
 ```
