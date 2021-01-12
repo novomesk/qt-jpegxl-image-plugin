@@ -19,7 +19,7 @@ Work in progress experimental implementation using [libjxl](https://gitlab.com/w
 
 Code for installation:
 ```
-git clone https://gitlab.com/wg1/jpeg-xl.git --recursive
+git clone --depth 1 https://gitlab.com/wg1/jpeg-xl.git --recursive
 cd jpeg-xl
 mkdir build
 cd build
@@ -44,7 +44,7 @@ and run:
 
 Clone, build and install:
 ```
-git clone https://github.com/novomesk/qt-jpegxl-image-plugin
+git clone --depth 1 https://github.com/novomesk/qt-jpegxl-image-plugin
 cd qt-jpegxl-image-plugin
 ./build_libqjpegxl_dynamic.sh
 sudo make install
