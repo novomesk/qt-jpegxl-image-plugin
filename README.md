@@ -13,44 +13,43 @@ Work in progress experimental implementation using [libjxl](https://gitlab.com/w
 
 # Installation
 
-### 1. Clone and install JPEG XL
+### 1. Clone, build and install JPEG-XL
 
 **!Important!** Clone must be `--recursive` to include third party packages
 
-Code for installation:
+Code for download and compilation:
 ```
 git clone --depth 1 https://gitlab.com/wg1/jpeg-xl.git --recursive
 cd jpeg-xl
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DJPEGXL_ENABLE_PLUGINS=ON -DBUILD_TESTING=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DJPEGXL_ENABLE_SJPEG=OFF ..
-cmake --build . -- -j
-sudo make install
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DJPEGXL_ENABLE_PLUGINS=ON -DBUILD_TESTING=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DJPEGXL_ENABLE_SJPEG=OFF ..
+make
 ```
+Code for installation (run as root):
 
-### 2. Copy mime file
+`make install`
 
-Copy `image-xl.xml` from `jpeg-xl/plugins/mime` to `/usr/share/mime/packages`
+### 2. Update mime database file
 
-From `jpeg-xl/plugins/mime/`execute:
+Check if the `image-jxl.xml` file was installed to `/usr/share/mime/packages/` folder and run (as root):
 
-`sudo cp ./image-jxl.xml /usr/share/mime/packages`
-
-and run:
-
-`sudo update-mime-database /usr/share/mime `
+`update-mime-database /usr/share/mime/`
 
 ### 3. Build qt-jpegxl-image-plugin
 
-Clone, build and install:
+Download and build:
 ```
 git clone --depth 1 https://github.com/novomesk/qt-jpegxl-image-plugin
 cd qt-jpegxl-image-plugin
 ./build_libqjpegxl_dynamic.sh
-sudo make install
 ```
+Install (run as root):
+
+`make install`
 
 ### 4. Add `image/jxl` to `/usr/share/kservices5/imagethumbnail.desktop`
 
-1. Open `/usr/share/kservices5/imagethumbnail.desktop` with editor of choise
-2. Find line that starts with `MimeType=` and add `image/jxl;` to it's end, so line looks like `MimeType=image/cgm; ... image/rle;image/jxl;`, save file.
+1. Open `/usr/share/kservices5/imagethumbnail.desktop` with editor of your choise
+2. Find line that starts with `MimeType=` and add `image/jxl;` to it's end, so line looks like `MimeType=image/cgm; ... ;image/rle;image/avif;image/jxl;`, save file.
+3. Run `update-desktop-database`
