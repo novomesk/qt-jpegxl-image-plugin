@@ -53,3 +53,13 @@ Install (run as root):
 1. Open `/usr/share/kservices5/imagethumbnail.desktop` with editor of your choise
 2. Find line that starts with `MimeType=` and add `image/jxl;` to it's end, so line looks like `MimeType=image/cgm; ... ;image/rle;image/avif;image/jxl;`, save file.
 3. Run `update-desktop-database`
+
+# Test
+```
+cd testfiles
+gwenview jpegxl-logo.jxl
+```
+
+Expected result:
+
+![jpegxl-logo.jxl in gwenview](testfiles/gwenview.png)
