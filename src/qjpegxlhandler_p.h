@@ -13,50 +13,54 @@
 class QJpegXLHandler : public QImageIOHandler
 {
 public:
-  QJpegXLHandler();
-  ~QJpegXLHandler();
+    QJpegXLHandler();
+    ~QJpegXLHandler();
 
-  bool canRead() const override;
-  bool read (QImage *image) override;
-  bool write (const QImage &image) override;
+    bool canRead() const override;
+    bool read(QImage *image) override;
+    bool write(const QImage &image) override;
 
-  static bool canRead (QIODevice *device);
+    static bool canRead(QIODevice *device);
 
-  QVariant option (ImageOption option) const override;
-  void setOption (ImageOption option, const QVariant &value) override;
-  bool supportsOption (ImageOption option) const override;
+    QVariant option(ImageOption option) const override;
+    void setOption(ImageOption option, const QVariant &value) override;
+    bool supportsOption(ImageOption option) const override;
 
-  int imageCount() const override;
-  int currentImageNumber() const override;
-  bool jumpToNextImage() override;
-  bool jumpToImage (int imageNumber) override;
+    int imageCount() const override;
+    int currentImageNumber() const override;
+    bool jumpToNextImage() override;
+    bool jumpToImage(int imageNumber) override;
 
-  int nextImageDelay() const override;
+    int nextImageDelay() const override;
 
-  int loopCount() const override;
+    int loopCount() const override;
 private:
-  bool ensureParsed() const;
-  bool ensureDecoder();
+    bool ensureParsed() const;
+    bool ensureALLDecoded() const;
+    bool ensureDecoder();
+    bool decodeALLFrames();
 
-  enum ParseJpegXLState
-  {
-    ParseJpegXLError = -1,
-    ParseJpegXLNotParsed = 0,
-    ParseJpegXLSuccess = 1
-  };
+    enum ParseJpegXLState {
+        ParseJpegXLError = -1,
+        ParseJpegXLNotParsed = 0,
+        ParseJpegXLSuccess = 1,
+        ParseJpegXLBasicInfoParsed = 2
+    };
 
-  ParseJpegXLState m_parseState;
-  int m_quality;
-  int m_currentimage_index;
+    ParseJpegXLState m_parseState;
+    int m_quality;
+    int m_currentimage_index;
 
-  QByteArray m_rawData;
+    QByteArray m_rawData;
+    const uint8_t *m_buffer_remaining;
+    size_t m_length_remaining;
 
-  JxlDecoder *m_decoder;
-  void *m_runner;
-  JxlBasicInfo m_basicinfo;
+    JxlDecoder *m_decoder;
+    void *m_runner;
+    JxlBasicInfo m_basicinfo;
 
-  QList<QPair<QImage, int>> m_frames;
-  int           m_next_image_delay;
+    QList<QPair<QImage, int>> m_frames;
+    int           m_next_image_delay;
 };
 
 #endif // QJPEGXLHANDLER_P_H
