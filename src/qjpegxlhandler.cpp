@@ -309,7 +309,7 @@ bool QJpegXLHandler::read(QImage *image)
     *image = currentimage.first;
     m_next_image_delay = currentimage.second;
 
-    if (imageCount() >= 2) {
+    if (m_frames.count() >= 2) {
         jumpToNextImage();
     }
     return true;
@@ -509,8 +509,18 @@ bool QJpegXLHandler::supportsOption(ImageOption option) const
 
 int QJpegXLHandler::imageCount() const
 {
-    if (!ensureALLDecoded()) {
+    if (!ensureParsed()) {
         return 0;
+    }
+
+    if (m_parseState == ParseJpegXLBasicInfoParsed) {
+        if (!m_basicinfo.have_animation) {
+            return 1;
+        }
+
+        if (!ensureALLDecoded()) {
+            return 0;
+        }
     }
 
     if (!m_frames.isEmpty()) {
@@ -538,13 +548,15 @@ bool QJpegXLHandler::jumpToNextImage()
         return false;
     }
 
-    if (imageCount() < 2) {
+    const int imagecount = m_frames.count();
+
+    if (imagecount < 2) {
         return true;
     }
 
     int next_image_index = m_currentimage_index + 1;
 
-    if (next_image_index >= imageCount() || next_image_index < 0) {
+    if (next_image_index >= imagecount || next_image_index < 0) {
         m_currentimage_index = 0;
     } else {
         m_currentimage_index = next_image_index;
@@ -559,7 +571,7 @@ bool QJpegXLHandler::jumpToImage(int imageNumber)
         return false;
     }
 
-    if (imageNumber >= 0 && imageNumber < imageCount()) {
+    if (imageNumber >= 0 && imageNumber < m_frames.count()) {
         m_currentimage_index = imageNumber;
         return true;
     } else {
@@ -573,7 +585,7 @@ int QJpegXLHandler::nextImageDelay() const
         return 0;
     }
 
-    if (imageCount() < 2) {
+    if (m_frames.count() < 2) {
         return 0;
     }
 
