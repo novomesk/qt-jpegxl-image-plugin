@@ -52,8 +52,6 @@ private:
     int m_currentimage_index;
 
     QByteArray m_rawData;
-    const uint8_t *m_buffer_remaining;
-    size_t m_length_remaining;
 
     JxlDecoder *m_decoder;
     void *m_runner;

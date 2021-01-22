@@ -19,8 +19,6 @@ QJpegXLHandler::QJpegXLHandler() :
     m_parseState(ParseJpegXLNotParsed),
     m_quality(52),
     m_currentimage_index(0),
-    m_buffer_remaining(nullptr),
-    m_length_remaining(0),
     m_decoder(nullptr),
     m_runner(nullptr),
     m_next_image_delay(0)
@@ -103,10 +101,12 @@ bool QJpegXLHandler::ensureDecoder()
     }
 
     m_rawData = device()->readAll();
-    m_buffer_remaining = (const uint8_t *)m_rawData.constData();
-    m_length_remaining = m_rawData.size();
 
-    JxlSignature signature = JxlSignatureCheck(m_buffer_remaining, m_length_remaining);
+    if (m_rawData.isEmpty()) {
+        return false;
+    }
+
+    JxlSignature signature = JxlSignatureCheck((const uint8_t *)m_rawData.constData(), m_rawData.size());
     if (signature != JXL_SIG_CODESTREAM && signature != JXL_SIG_CONTAINER) {
         m_parseState = ParseJpegXLError;
         return false;
@@ -128,6 +128,12 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
+    if (JxlDecoderSetInput(m_decoder, (const uint8_t *)m_rawData.constData(), m_rawData.size()) != JXL_DEC_SUCCESS) {
+        qWarning("ERROR: JxlDecoderSetInput failed");
+        m_parseState = ParseJpegXLError;
+        return false;
+    }
+
     JxlDecoderStatus status = JxlDecoderSubscribeEvents(m_decoder,
                               JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING
                               | JXL_DEC_FRAME | JXL_DEC_FULL_IMAGE);
@@ -137,7 +143,7 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
-    status = JxlDecoderProcessInput(m_decoder, &m_buffer_remaining, &m_length_remaining);
+    status = JxlDecoderProcessInput(m_decoder);
     if (status == JXL_DEC_ERROR) {
         qWarning("ERROR: JXL decoding failed");
         m_parseState = ParseJpegXLError;
@@ -179,7 +185,7 @@ bool QJpegXLHandler::decodeALLFrames()
         return false;
     }
 
-    JxlDecoderStatus status = JxlDecoderProcessInput(m_decoder, &m_buffer_remaining, &m_length_remaining);
+    JxlDecoderStatus status = JxlDecoderProcessInput(m_decoder);
     if (status != JXL_DEC_COLOR_ENCODING) {
         qWarning("Unexpected event %d instead of JXL_DEC_COLOR_ENCODING", status);
         m_parseState = ParseJpegXLError;
@@ -226,9 +232,9 @@ bool QJpegXLHandler::decodeALLFrames()
     JxlFrameHeader frame_header;
     int delay;
 
-    for (status = JxlDecoderProcessInput(m_decoder, &m_buffer_remaining, &m_length_remaining);
+    for (status = JxlDecoderProcessInput(m_decoder);
             status != JXL_DEC_SUCCESS;
-            status = JxlDecoderProcessInput(m_decoder, &m_buffer_remaining, &m_length_remaining)) {
+            status = JxlDecoderProcessInput(m_decoder)) {
 
         if (status != JXL_DEC_FRAME) {
             qWarning("Unexpected event %d instead of JXL_DEC_FRAME", status);
@@ -249,7 +255,7 @@ bool QJpegXLHandler::decodeALLFrames()
             }
         }
 
-        status = JxlDecoderProcessInput(m_decoder, &m_buffer_remaining, &m_length_remaining);
+        status = JxlDecoderProcessInput(m_decoder);
         if (status != JXL_DEC_NEED_IMAGE_OUT_BUFFER) {
             qWarning("Unexpected event %d instead of JXL_DEC_NEED_IMAGE_OUT_BUFFER", status);
             m_parseState = ParseJpegXLError;
@@ -271,7 +277,7 @@ bool QJpegXLHandler::decodeALLFrames()
             return false;
         }
 
-        status = JxlDecoderProcessInput(m_decoder, &m_buffer_remaining, &m_length_remaining);
+        status = JxlDecoderProcessInput(m_decoder);
         if (status != JXL_DEC_FULL_IMAGE) {
             qWarning("Unexpected event %d instead of JXL_DEC_FULL_IMAGE", status);
             m_parseState = ParseJpegXLError;
@@ -293,8 +299,7 @@ bool QJpegXLHandler::decodeALLFrames()
     m_next_image_delay = m_frames.first().second;
 
     m_parseState = ParseJpegXLSuccess;
-    m_buffer_remaining = nullptr;
-    m_length_remaining = 0;
+    JxlDecoderReleaseInput(m_decoder);
     m_rawData.clear();
     return true;
 }
