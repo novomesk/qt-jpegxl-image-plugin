@@ -1,0 +1,28 @@
+version: 0.1.{build}
+environment:
+  CC: cl.exe
+  CXX: cl.exe
+install:
+- cmd: >-
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+    git clone --depth 1 https://gitlab.com/wg1/jpeg-xl.git --recursive
+
+    cd jpeg-xl
+
+    mkdir build
+
+    cd build
+
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_SKCMS=ON -DJPEGXL_WARNINGS_AS_ERRORS=OFF ..
+
+    ninja jxl-static jxl_threads-static hwy skcms
+
+    cd ..\..
+build_script:
+- cmd: >-
+    C:\Qt\5.14.2\msvc2017_64\bin\qmake.exe qt-jpegxl-image-plugin_appveyor.pro
+
+    nmake
+artifacts:
+- path: plugins\imageformats\qjpegxl.dll
