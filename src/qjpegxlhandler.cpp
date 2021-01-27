@@ -212,7 +212,7 @@ bool QJpegXLHandler::decodeALLFrames()
     size_t icc_size = 0;
     if (JxlDecoderGetICCProfileSize(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
         if (icc_size > 0) {
-            QByteArray icc_data(icc_size, 0);
+            QByteArray icc_data((int) icc_size, 0);
             if (JxlDecoderGetColorAsICCProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, (uint8_t *)icc_data.data(), icc_data.size()) == JXL_DEC_SUCCESS) {
                 colorspace = QColorSpace::fromIccProfile(icc_data);
 
