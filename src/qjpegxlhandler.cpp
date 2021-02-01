@@ -201,14 +201,37 @@ bool QJpegXLHandler::decodeALLFrames()
         loadalpha = false;
     }
 
+    size_t result_size;
+    QImage::Format tmp_image_format;
+    QImage::Format target_image_format;
     JxlPixelFormat pixel_format;
 
     pixel_format.endianness = JXL_NATIVE_ENDIAN;
-    pixel_format.data_type = JXL_TYPE_UINT16;
     pixel_format.align = 0;
     pixel_format.num_channels = 4;
 
-    const size_t result_size = 8 * (size_t) m_basicinfo.xsize * (size_t) m_basicinfo.ysize;
+    if (m_basicinfo.bits_per_sample > 8) { //high bit depth
+        pixel_format.data_type = JXL_TYPE_UINT16;
+        result_size = 8 * (size_t) m_basicinfo.xsize * (size_t) m_basicinfo.ysize;
+        tmp_image_format = QImage::Format_RGBA64;
+
+        if (loadalpha) {
+            target_image_format = QImage::Format_RGBA64;
+        } else {
+            target_image_format = QImage::Format_RGBX64;
+        }
+    } else { // 8bit depth
+        pixel_format.data_type = JXL_TYPE_UINT8;
+        result_size = 4 * (size_t) m_basicinfo.xsize * (size_t) m_basicinfo.ysize;
+        tmp_image_format = QImage::Format_RGBA8888;
+
+        if (loadalpha) {
+            target_image_format = QImage::Format_ARGB32;
+        } else {
+            target_image_format = QImage::Format_RGB32;
+        }
+    }
+
     size_t icc_size = 0;
     if (JxlDecoderGetICCProfileSize(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
         if (icc_size > 0) {
@@ -262,7 +285,7 @@ bool QJpegXLHandler::decodeALLFrames()
             return false;
         }
 
-        m_frames.append(QPair(QImage(m_basicinfo.xsize, m_basicinfo.ysize, QImage::Format_RGBA64), delay));
+        m_frames.append(QPair(QImage(m_basicinfo.xsize, m_basicinfo.ysize, tmp_image_format), delay));
         if (m_frames.last().first.isNull()) {
             qWarning("Memory cannot be allocated");
             m_parseState = ParseJpegXLError;
@@ -284,10 +307,11 @@ bool QJpegXLHandler::decodeALLFrames()
             return false;
         }
 
-        qWarning("full image");
-        if (!loadalpha) {
-            m_frames.last().first = m_frames.last().first.convertToFormat(QImage::Format_RGBX64);
+        if (target_image_format != tmp_image_format) {
+            m_frames.last().first = m_frames.last().first.convertToFormat(target_image_format);
         }
+
+        qWarning("full image, format=%d", m_frames.last().first.format());
     }
 
     if (m_frames.isEmpty()) {
