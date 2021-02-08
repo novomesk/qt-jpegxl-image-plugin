@@ -492,13 +492,15 @@ bool QJpegXLHandler::write(const QImage &image)
 
 QVariant QJpegXLHandler::option(ImageOption option) const
 {
+    if (option == Quality) {
+        return m_quality;
+    }
+
     if (!supportsOption(option) || !ensureParsed()) {
         return QVariant();
     }
 
     switch (option) {
-    case Quality:
-        return m_quality;
     case Size:
         return QSize(m_basicinfo.xsize, m_basicinfo.ysize);
     case Animation:
