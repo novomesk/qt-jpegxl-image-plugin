@@ -372,6 +372,112 @@ bool QJpegXLHandler::write(const QImage &image)
 
     JxlEncoderOptions *encoder_options = JxlEncoderOptionsCreate(encoder, NULL);
 
+    JxlBasicInfo output_info;
+    memset(&output_info, 0, sizeof output_info);
+
+    JxlColorEncoding color_profile;
+    memset(&color_profile, 0, sizeof color_profile);
+
+    bool convert_color_profile = false;
+    QColorSpace qt_colorspace;
+
+    if (image.colorSpace().isValid()) { //valid profile
+        color_profile.color_space = JXL_COLOR_SPACE_RGB;
+        color_profile.white_point = JXL_WHITE_POINT_D65;
+        color_profile.white_point_xy[0] = 0.31271;
+        color_profile.white_point_xy[1] = 0.32902;
+
+        switch (image.colorSpace().primaries()) {
+        case QColorSpace::Primaries::SRgb:
+            color_profile.primaries = JXL_PRIMARIES_SRGB;
+            color_profile.primaries_red_xy[0] = 0.640;
+            color_profile.primaries_red_xy[1] = 0.330;
+            color_profile.primaries_green_xy[0] = 0.300;
+            color_profile.primaries_green_xy[1] = 0.600;
+            color_profile.primaries_blue_xy[0] = 0.150;
+            color_profile.primaries_blue_xy[1] = 0.060;
+
+            switch (image.colorSpace().transferFunction()) {
+            case QColorSpace::TransferFunction::Linear:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
+                break;
+            case QColorSpace::TransferFunction::Gamma:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+                color_profile.gamma = 1.0 / image.colorSpace().gamma();
+                break;
+            case QColorSpace::TransferFunction::SRgb:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+                break;
+            default:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::SRgb);
+                convert_color_profile = true;
+                break;
+            }
+            break;
+        case QColorSpace::Primaries::DciP3D65:
+            color_profile.primaries = JXL_PRIMARIES_P3;
+            color_profile.primaries_red_xy[0] = 0.680;
+            color_profile.primaries_red_xy[1] = 0.320;
+            color_profile.primaries_green_xy[0] = 0.265;
+            color_profile.primaries_green_xy[1] = 0.690;
+            color_profile.primaries_blue_xy[0] = 0.150;
+            color_profile.primaries_blue_xy[1] = 0.060;
+
+            switch (image.colorSpace().transferFunction()) {
+            case QColorSpace::TransferFunction::Linear:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
+                break;
+            case QColorSpace::TransferFunction::Gamma:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+                color_profile.gamma = 1.0 / image.colorSpace().gamma();
+                break;
+            case QColorSpace::TransferFunction::SRgb:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+                break;
+            default:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+                qt_colorspace = QColorSpace(QColorSpace::Primaries::DciP3D65, QColorSpace::TransferFunction::SRgb);
+                convert_color_profile = true;
+                break;
+            }
+            break;
+        default:
+            color_profile.primaries = JXL_PRIMARIES_SRGB;
+            color_profile.primaries_red_xy[0] = 0.640;
+            color_profile.primaries_red_xy[1] = 0.330;
+            color_profile.primaries_green_xy[0] = 0.300;
+            color_profile.primaries_green_xy[1] = 0.600;
+            color_profile.primaries_blue_xy[0] = 0.150;
+            color_profile.primaries_blue_xy[1] = 0.060;
+
+            convert_color_profile = true;
+
+            switch (image.colorSpace().transferFunction()) {
+            case QColorSpace::TransferFunction::Linear:
+                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::Linear);
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
+                break;
+            case QColorSpace::TransferFunction::Gamma:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+                color_profile.gamma = 1.0 / image.colorSpace().gamma();
+                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::Gamma, image.colorSpace().gamma());
+                break;
+            case QColorSpace::TransferFunction::SRgb:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::SRgb);
+                break;
+            default:
+                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::SRgb);
+                break;
+            }
+            break;
+        }
+    } else { //invalid profile
+        JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
+    }
+
     JxlPixelFormat pixel_format;
     QImage::Format tmpformat;
     JxlEncoderStatus status;
@@ -383,12 +489,18 @@ bool QJpegXLHandler::write(const QImage &image)
     if (image.hasAlphaChannel()) {
         tmpformat = QImage::Format_RGBA64;
         pixel_format.num_channels = 4;
+        output_info.alpha_bits = 16;
+        output_info.num_extra_channels = 1;
     } else {
         tmpformat = QImage::Format_RGBX64;
         pixel_format.num_channels = 3;
+        output_info.alpha_bits = 0;
     }
 
-    const QImage tmpimage = image.convertToFormat(tmpformat).convertedToColorSpace(QColorSpace(QColorSpace::SRgb));
+    const QImage tmpimage = convert_color_profile ?
+                            image.convertToFormat(tmpformat).convertedToColorSpace(qt_colorspace) :
+                            image.convertToFormat(tmpformat);
+
     const size_t xsize = tmpimage.width();
     const size_t ysize = tmpimage.height();
     const size_t buffer_size = 2 * pixel_format.num_channels * xsize * ysize;
@@ -400,9 +512,24 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
-    status = JxlEncoderSetDimensions(encoder, xsize, ysize);
+    output_info.xsize = tmpimage.width();
+    output_info.ysize = tmpimage.height();
+    output_info.bits_per_sample = 16;
+    output_info.intensity_target = 255.0f;
+    output_info.orientation = JXL_ORIENT_IDENTITY;
+    output_info.num_color_channels = 3;
+
+    status = JxlEncoderSetBasicInfo(encoder, &output_info);
     if (status != JXL_ENC_SUCCESS) {
-        qWarning("JxlEncoderSetDimensions failed!");
+        qWarning("JxlEncoderSetBasicInfo failed!");
+        JxlThreadParallelRunnerDestroy(runner);
+        JxlEncoderDestroy(encoder);
+        return false;
+    }
+
+    status = JxlEncoderSetColorEncoding(encoder, &color_profile);
+    if (status != JXL_ENC_SUCCESS) {
+        qWarning("JxlEncoderSetColorEncoding failed!");
         JxlThreadParallelRunnerDestroy(runner);
         JxlEncoderDestroy(encoder);
         return false;
