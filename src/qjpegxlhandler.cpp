@@ -17,7 +17,7 @@
 
 QJpegXLHandler::QJpegXLHandler() :
     m_parseState(ParseJpegXLNotParsed),
-    m_quality(52),
+    m_quality(90),
     m_currentimage_index(0),
     m_decoder(nullptr),
     m_runner(nullptr),
@@ -372,6 +372,16 @@ bool QJpegXLHandler::write(const QImage &image)
 
     JxlEncoderOptions *encoder_options = JxlEncoderOptionsCreate(encoder, NULL);
 
+    if (m_quality > 100) {
+        m_quality = 100;
+    } else if (m_quality < 0) {
+        m_quality = 90;
+    }
+
+    JxlEncoderOptionsSetDistance(encoder_options, (100.0f - m_quality) / 10.0f);
+
+    JxlEncoderOptionsSetLossless(encoder_options, (m_quality == 100) ? JXL_TRUE : JXL_FALSE);
+
     JxlBasicInfo output_info;
     memset(&output_info, 0, sizeof output_info);
 
@@ -649,7 +659,7 @@ void QJpegXLHandler::setOption(ImageOption option, const QVariant &value)
         if (m_quality > 100) {
             m_quality = 100;
         } else if (m_quality < 0) {
-            m_quality = 52;
+            m_quality = 90;
         }
         return;
     default:
