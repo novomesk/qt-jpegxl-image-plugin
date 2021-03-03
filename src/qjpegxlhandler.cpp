@@ -279,6 +279,11 @@ bool QJpegXLHandler::decodeALLFrames()
         }
 
         status = JxlDecoderProcessInput(m_decoder);
+        if (status == JXL_DEC_FRAME) {
+            qWarning("Skip second JXL_DEC_FRAME event");
+            status = JxlDecoderProcessInput(m_decoder);
+        }
+
         if (status != JXL_DEC_NEED_IMAGE_OUT_BUFFER) {
             qWarning("Unexpected event %d instead of JXL_DEC_NEED_IMAGE_OUT_BUFFER", status);
             m_parseState = ParseJpegXLError;
