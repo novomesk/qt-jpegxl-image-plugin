@@ -3,11 +3,8 @@
  * Author: Daniel Novomesky
  */
 
-/*
-*/
-
-#include <QtGlobal>
 #include <QThread>
+#include <QtGlobal>
 
 #include <QColorSpace>
 
@@ -15,13 +12,13 @@
 #include <jxl/encode.h>
 #include <jxl/thread_parallel_runner.h>
 
-QJpegXLHandler::QJpegXLHandler() :
-    m_parseState(ParseJpegXLNotParsed),
-    m_quality(90),
-    m_currentimage_index(0),
-    m_decoder(nullptr),
-    m_runner(nullptr),
-    m_next_image_delay(0)
+QJpegXLHandler::QJpegXLHandler()
+    : m_parseState(ParseJpegXLNotParsed)
+    , m_quality(90)
+    , m_currentimage_index(0)
+    , m_decoder(nullptr)
+    , m_runner(nullptr)
+    , m_next_image_delay(0)
 {
 }
 
@@ -134,9 +131,7 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
-    JxlDecoderStatus status = JxlDecoderSubscribeEvents(m_decoder,
-                              JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING
-                              | JXL_DEC_FRAME | JXL_DEC_FULL_IMAGE);
+    JxlDecoderStatus status = JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FRAME | JXL_DEC_FULL_IMAGE);
     if (status == JXL_DEC_ERROR) {
         qWarning("ERROR: JxlDecoderSubscribeEvents failed");
         m_parseState = ParseJpegXLError;
@@ -154,7 +149,6 @@ bool QJpegXLHandler::ensureDecoder()
         m_parseState = ParseJpegXLError;
         return false;
     }
-
 
     status = JxlDecoderGetBasicInfo(m_decoder, &m_basicinfo);
     if (status != JXL_DEC_SUCCESS) {
@@ -210,9 +204,9 @@ bool QJpegXLHandler::decodeALLFrames()
     pixel_format.align = 0;
     pixel_format.num_channels = 4;
 
-    if (m_basicinfo.bits_per_sample > 8) { //high bit depth
+    if (m_basicinfo.bits_per_sample > 8) { // high bit depth
         pixel_format.data_type = JXL_TYPE_UINT16;
-        result_size = 8 * (size_t) m_basicinfo.xsize * (size_t) m_basicinfo.ysize;
+        result_size = 8 * (size_t)m_basicinfo.xsize * (size_t)m_basicinfo.ysize;
         tmp_image_format = QImage::Format_RGBA64;
 
         if (loadalpha) {
@@ -222,7 +216,7 @@ bool QJpegXLHandler::decodeALLFrames()
         }
     } else { // 8bit depth
         pixel_format.data_type = JXL_TYPE_UINT8;
-        result_size = 4 * (size_t) m_basicinfo.xsize * (size_t) m_basicinfo.ysize;
+        result_size = 4 * (size_t)m_basicinfo.xsize * (size_t)m_basicinfo.ysize;
         tmp_image_format = QImage::Format_RGBA8888;
 
         if (loadalpha) {
@@ -235,8 +229,9 @@ bool QJpegXLHandler::decodeALLFrames()
     size_t icc_size = 0;
     if (JxlDecoderGetICCProfileSize(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
         if (icc_size > 0) {
-            QByteArray icc_data((int) icc_size, 0);
-            if (JxlDecoderGetColorAsICCProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, (uint8_t *)icc_data.data(), icc_data.size()) == JXL_DEC_SUCCESS) {
+            QByteArray icc_data((int)icc_size, 0);
+            if (JxlDecoderGetColorAsICCProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, (uint8_t *)icc_data.data(), icc_data.size())
+                == JXL_DEC_SUCCESS) {
                 colorspace = QColorSpace::fromIccProfile(icc_data);
 
                 if (!colorspace.isValid()) {
@@ -255,10 +250,7 @@ bool QJpegXLHandler::decodeALLFrames()
     JxlFrameHeader frame_header;
     int delay;
 
-    for (status = JxlDecoderProcessInput(m_decoder);
-            status != JXL_DEC_SUCCESS;
-            status = JxlDecoderProcessInput(m_decoder)) {
-
+    for (status = JxlDecoderProcessInput(m_decoder); status != JXL_DEC_SUCCESS; status = JxlDecoderProcessInput(m_decoder)) {
         if (status != JXL_DEC_FRAME) {
             qWarning("Unexpected event %d instead of JXL_DEC_FRAME", status);
             m_parseState = ParseJpegXLError;
@@ -290,7 +282,7 @@ bool QJpegXLHandler::decodeALLFrames()
             return false;
         }
 
-        m_frames.append(QPair(QImage(m_basicinfo.xsize, m_basicinfo.ysize, tmp_image_format), delay));
+        m_frames.append(QPair<QImage, int>(QImage(m_basicinfo.xsize, m_basicinfo.ysize, tmp_image_format), delay));
         if (m_frames.last().first.isNull()) {
             qWarning("Memory cannot be allocated");
             m_parseState = ParseJpegXLError;
@@ -339,7 +331,7 @@ bool QJpegXLHandler::read(QImage *image)
         return false;
     }
 
-    const QPair<QImage, int>  &currentimage = m_frames.at(m_currentimage_index);
+    const QPair<QImage, int> &currentimage = m_frames.at(m_currentimage_index);
     *image = currentimage.first;
     m_next_image_delay = currentimage.second;
 
@@ -396,7 +388,7 @@ bool QJpegXLHandler::write(const QImage &image)
     bool convert_color_profile = false;
     QColorSpace qt_colorspace;
 
-    if (image.colorSpace().isValid()) { //valid profile
+    if (image.colorSpace().isValid()) { // valid profile
         color_profile.color_space = JXL_COLOR_SPACE_RGB;
         color_profile.white_point = JXL_WHITE_POINT_D65;
         color_profile.white_point_xy[0] = 0.31271;
@@ -489,7 +481,7 @@ bool QJpegXLHandler::write(const QImage &image)
             }
             break;
         }
-    } else { //invalid profile
+    } else { // invalid profile
         JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
     }
 
@@ -512,9 +504,7 @@ bool QJpegXLHandler::write(const QImage &image)
         output_info.alpha_bits = 0;
     }
 
-    const QImage tmpimage = convert_color_profile ?
-                            image.convertToFormat(tmpformat).convertedToColorSpace(qt_colorspace) :
-                            image.convertToFormat(tmpformat);
+    const QImage tmpimage = convert_color_profile ? image.convertToFormat(tmpformat).convertedToColorSpace(qt_colorspace) : image.convertToFormat(tmpformat);
 
     const size_t xsize = tmpimage.width();
     const size_t ysize = tmpimage.height();
@@ -553,7 +543,7 @@ bool QJpegXLHandler::write(const QImage &image)
     if (image.hasAlphaChannel()) {
         status = JxlEncoderAddImageFrame(encoder_options, &pixel_format, (void *)tmpimage.constBits(), buffer_size);
     } else {
-        uint16_t *tmp_buffer = new (std::nothrow) uint16_t [3 * xsize * ysize];
+        uint16_t *tmp_buffer = new (std::nothrow) uint16_t[3 * xsize * ysize];
         if (!tmp_buffer) {
             qWarning("Memory allocation error");
             JxlThreadParallelRunnerDestroy(runner);
@@ -565,22 +555,22 @@ bool QJpegXLHandler::write(const QImage &image)
         for (int y = 0; y < tmpimage.height(); y++) {
             const uint16_t *src_pixels = reinterpret_cast<const uint16_t *>(tmpimage.constScanLine(y));
             for (int x = 0; x < tmpimage.width(); x++) {
-                //R
+                // R
                 *dest_pixels = *src_pixels;
                 dest_pixels++;
                 src_pixels++;
-                //G
+                // G
                 *dest_pixels = *src_pixels;
                 dest_pixels++;
                 src_pixels++;
-                //B
+                // B
                 *dest_pixels = *src_pixels;
                 dest_pixels++;
-                src_pixels += 2; //skipalpha
+                src_pixels += 2; // skipalpha
             }
         }
         status = JxlEncoderAddImageFrame(encoder_options, &pixel_format, (void *)tmp_buffer, buffer_size);
-        delete [] tmp_buffer;
+        delete[] tmp_buffer;
     }
 
     if (status == JXL_ENC_ERROR) {
@@ -599,11 +589,11 @@ bool QJpegXLHandler::write(const QImage &image)
     size_t avail_out;
     do {
         next_out = compressed.data() + offset;
-        avail_out =  compressed.size() - offset;
+        avail_out = compressed.size() - offset;
         status = JxlEncoderProcessOutput(encoder, &next_out, &avail_out);
 
         if (status == JXL_ENC_NEED_MORE_OUTPUT) {
-            offset =  next_out - compressed.data();
+            offset = next_out - compressed.data();
             compressed.resize(compressed.size() * 2);
         } else if (status == JXL_ENC_ERROR) {
             qWarning("JxlEncoderProcessOutput failed!");
@@ -630,7 +620,6 @@ bool QJpegXLHandler::write(const QImage &image)
 
     return false;
 }
-
 
 QVariant QJpegXLHandler::option(ImageOption option) const
 {
@@ -675,9 +664,7 @@ void QJpegXLHandler::setOption(ImageOption option, const QVariant &value)
 
 bool QJpegXLHandler::supportsOption(ImageOption option) const
 {
-    return option == Quality
-           || option == Size
-           || option == Animation;
+    return option == Quality || option == Size || option == Animation;
 }
 
 int QJpegXLHandler::imageCount() const

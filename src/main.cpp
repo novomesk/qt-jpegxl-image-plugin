@@ -3,11 +3,8 @@
  * Author: Daniel Novomesky
  */
 
-/*
-*/
-
-#include <QImageIOPlugin>
 #include "qjpegxlhandler_p.h"
+#include <QImageIOPlugin>
 
 class QJpegXLPlugin : public QImageIOPlugin
 {

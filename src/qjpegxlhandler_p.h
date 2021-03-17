@@ -1,12 +1,12 @@
 #ifndef QJPEGXLHANDLER_P_H
 #define QJPEGXLHANDLER_P_H
 
+#include <QByteArray>
 #include <QImage>
-#include <QPair>
 #include <QList>
+#include <QPair>
 #include <QVariant>
 #include <qimageiohandler.h>
-#include <QByteArray>
 
 #include <jxl/decode.h>
 
@@ -34,6 +34,7 @@ public:
     int nextImageDelay() const override;
 
     int loopCount() const override;
+
 private:
     bool ensureParsed() const;
     bool ensureALLDecoded() const;
@@ -44,7 +45,7 @@ private:
         ParseJpegXLError = -1,
         ParseJpegXLNotParsed = 0,
         ParseJpegXLSuccess = 1,
-        ParseJpegXLBasicInfoParsed = 2
+        ParseJpegXLBasicInfoParsed = 2,
     };
 
     ParseJpegXLState m_parseState;
@@ -58,7 +59,7 @@ private:
     JxlBasicInfo m_basicinfo;
 
     QList<QPair<QImage, int>> m_frames;
-    int           m_next_image_delay;
+    int m_next_image_delay;
 };
 
 #endif // QJPEGXLHANDLER_P_H
