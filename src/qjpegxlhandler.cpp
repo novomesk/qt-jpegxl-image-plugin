@@ -109,7 +109,7 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
-    m_decoder = JxlDecoderCreate(NULL);
+    m_decoder = JxlDecoderCreate(nullptr);
     if (!m_decoder) {
         qWarning("ERROR: JxlDecoderCreate failed");
         m_parseState = ParseJpegXLError;
@@ -117,7 +117,7 @@ bool QJpegXLHandler::ensureDecoder()
     }
 
     if (!m_runner) {
-        m_runner = JxlThreadParallelRunnerCreate(NULL, JxlThreadParallelRunnerDefaultNumWorkerThreads());
+        m_runner = JxlThreadParallelRunnerCreate(nullptr, JxlThreadParallelRunnerDefaultNumWorkerThreads());
     }
     if (JxlDecoderSetParallelRunner(m_decoder, JxlThreadParallelRunner, m_runner) != JXL_DEC_SUCCESS) {
         qWarning("ERROR: JxlDecoderSetParallelRunner failed");
@@ -353,13 +353,13 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
-    JxlEncoder *encoder = JxlEncoderCreate(NULL);
+    JxlEncoder *encoder = JxlEncoderCreate(nullptr);
     if (!encoder) {
         qWarning("Failed to create Jxl encoder");
         return false;
     }
 
-    void *runner = JxlThreadParallelRunnerCreate(NULL, JxlThreadParallelRunnerDefaultNumWorkerThreads());
+    void *runner = JxlThreadParallelRunnerCreate(nullptr, JxlThreadParallelRunnerDefaultNumWorkerThreads());
     if (JxlEncoderSetParallelRunner(encoder, JxlThreadParallelRunner, runner) != JXL_ENC_SUCCESS) {
         qWarning("JxlEncoderSetParallelRunner failed");
         JxlThreadParallelRunnerDestroy(runner);
@@ -367,7 +367,7 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
-    JxlEncoderOptions *encoder_options = JxlEncoderOptionsCreate(encoder, NULL);
+    JxlEncoderOptions *encoder_options = JxlEncoderOptionsCreate(encoder, nullptr);
 
     if (m_quality > 100) {
         m_quality = 100;
