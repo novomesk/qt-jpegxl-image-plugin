@@ -383,106 +383,18 @@ bool QJpegXLHandler::write(const QImage &image)
     memset(&output_info, 0, sizeof output_info);
 
     JxlColorEncoding color_profile;
-    memset(&color_profile, 0, sizeof color_profile);
+    JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
 
-    bool convert_color_profile = false;
-    QColorSpace qt_colorspace;
+    bool convert_color_profile;
 
-    if (image.colorSpace().isValid()) { // valid profile
-        color_profile.color_space = JXL_COLOR_SPACE_RGB;
-        color_profile.white_point = JXL_WHITE_POINT_D65;
-        color_profile.white_point_xy[0] = 0.31271;
-        color_profile.white_point_xy[1] = 0.32902;
-
-        switch (image.colorSpace().primaries()) {
-        case QColorSpace::Primaries::SRgb:
-            color_profile.primaries = JXL_PRIMARIES_SRGB;
-            color_profile.primaries_red_xy[0] = 0.640;
-            color_profile.primaries_red_xy[1] = 0.330;
-            color_profile.primaries_green_xy[0] = 0.300;
-            color_profile.primaries_green_xy[1] = 0.600;
-            color_profile.primaries_blue_xy[0] = 0.150;
-            color_profile.primaries_blue_xy[1] = 0.060;
-
-            switch (image.colorSpace().transferFunction()) {
-            case QColorSpace::TransferFunction::Linear:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
-                break;
-            case QColorSpace::TransferFunction::Gamma:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
-                color_profile.gamma = 1.0 / image.colorSpace().gamma();
-                break;
-            case QColorSpace::TransferFunction::SRgb:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-                break;
-            default:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::SRgb);
-                convert_color_profile = true;
-                break;
-            }
-            break;
-        case QColorSpace::Primaries::DciP3D65:
-            color_profile.primaries = JXL_PRIMARIES_P3;
-            color_profile.primaries_red_xy[0] = 0.680;
-            color_profile.primaries_red_xy[1] = 0.320;
-            color_profile.primaries_green_xy[0] = 0.265;
-            color_profile.primaries_green_xy[1] = 0.690;
-            color_profile.primaries_blue_xy[0] = 0.150;
-            color_profile.primaries_blue_xy[1] = 0.060;
-
-            switch (image.colorSpace().transferFunction()) {
-            case QColorSpace::TransferFunction::Linear:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
-                break;
-            case QColorSpace::TransferFunction::Gamma:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
-                color_profile.gamma = 1.0 / image.colorSpace().gamma();
-                break;
-            case QColorSpace::TransferFunction::SRgb:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-                break;
-            default:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-                qt_colorspace = QColorSpace(QColorSpace::Primaries::DciP3D65, QColorSpace::TransferFunction::SRgb);
-                convert_color_profile = true;
-                break;
-            }
-            break;
-        default:
-            color_profile.primaries = JXL_PRIMARIES_SRGB;
-            color_profile.primaries_red_xy[0] = 0.640;
-            color_profile.primaries_red_xy[1] = 0.330;
-            color_profile.primaries_green_xy[0] = 0.300;
-            color_profile.primaries_green_xy[1] = 0.600;
-            color_profile.primaries_blue_xy[0] = 0.150;
-            color_profile.primaries_blue_xy[1] = 0.060;
-
+    if (image.colorSpace().isValid()) {
+        if (image.colorSpace().primaries() != QColorSpace::Primaries::SRgb || image.colorSpace().transferFunction() != QColorSpace::TransferFunction::SRgb) {
             convert_color_profile = true;
-
-            switch (image.colorSpace().transferFunction()) {
-            case QColorSpace::TransferFunction::Linear:
-                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::Linear);
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
-                break;
-            case QColorSpace::TransferFunction::Gamma:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
-                color_profile.gamma = 1.0 / image.colorSpace().gamma();
-                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::Gamma, image.colorSpace().gamma());
-                break;
-            case QColorSpace::TransferFunction::SRgb:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::SRgb);
-                break;
-            default:
-                color_profile.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
-                qt_colorspace = QColorSpace(QColorSpace::Primaries::SRgb, QColorSpace::TransferFunction::SRgb);
-                break;
-            }
-            break;
+        } else {
+            convert_color_profile = false;
         }
     } else { // invalid profile
-        JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
+        convert_color_profile = false;
     }
 
     JxlPixelFormat pixel_format;
@@ -504,7 +416,8 @@ bool QJpegXLHandler::write(const QImage &image)
         output_info.alpha_bits = 0;
     }
 
-    const QImage tmpimage = convert_color_profile ? image.convertToFormat(tmpformat).convertedToColorSpace(qt_colorspace) : image.convertToFormat(tmpformat);
+    const QImage tmpimage =
+        convert_color_profile ? image.convertToFormat(tmpformat).convertedToColorSpace(QColorSpace(QColorSpace::SRgb)) : image.convertToFormat(tmpformat);
 
     const size_t xsize = tmpimage.width();
     const size_t ysize = tmpimage.height();
