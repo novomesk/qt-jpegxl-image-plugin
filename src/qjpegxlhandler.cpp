@@ -288,9 +288,9 @@ bool QJpegXLHandler::decodeALLFrames()
             m_parseState = ParseJpegXLError;
             return false;
         }
-        if (colorspace.isValid()) {
-            m_frames.last().first.setColorSpace(colorspace);
-        }
+
+        m_frames.last().first.setColorSpace(colorspace);
+
         if (JxlDecoderSetImageOutBuffer(m_decoder, &pixel_format, m_frames.last().first.bits(), result_size) != JXL_DEC_SUCCESS) {
             qWarning("ERROR: JxlDecoderSetImageOutBuffer failed");
             m_parseState = ParseJpegXLError;
