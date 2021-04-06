@@ -25,8 +25,8 @@ endfunction()
 ##################################
 
 if (LibJXL_FOUND)
-    kimageformats_add_plugin(qjpegxl JSON "jpegxl.json" SOURCES "main.cpp" "qjpegxlhandler.cpp")
-    target_link_libraries(qjpegxl PkgConfig::LibJXL PkgConfig::LibJXLThreads)
+    kimageformats_add_plugin(libqjpegxl JSON "jpegxl.json" SOURCES "main.cpp" "qjpegxlhandler.cpp")
+    target_link_libraries(libqjpegxl PkgConfig::LibJXL PkgConfig::LibJXLThreads)
     install(FILES jxl.desktop DESTINATION ${KDE_INSTALL_KSERVICES5DIR}/qimageioplugins/)
 endif()
 
