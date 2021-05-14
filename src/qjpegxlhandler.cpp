@@ -235,7 +235,7 @@ bool QJpegXLHandler::decodeALLFrames()
                 colorspace = QColorSpace::fromIccProfile(icc_data);
 
                 if (!colorspace.isValid()) {
-                    qWarning("invalid color profile created");
+                    qWarning("JXL image has Qt-unsupported or invalid ICC profile!");
                 }
             } else {
                 qWarning("Failed to obtain data from JPEG XL decoder");
@@ -386,6 +386,7 @@ bool QJpegXLHandler::write(const QImage &image)
     JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
 
     bool convert_color_profile;
+    QByteArray iccprofile;
 
     if (image.colorSpace().isValid()) {
         if (image.colorSpace().primaries() != QColorSpace::Primaries::SRgb || image.colorSpace().transferFunction() != QColorSpace::TransferFunction::SRgb) {
@@ -393,8 +394,12 @@ bool QJpegXLHandler::write(const QImage &image)
         } else {
             convert_color_profile = false;
         }
-    } else { // invalid profile
+    } else { // no profile or Qt-unsupported ICC profile
         convert_color_profile = false;
+        iccprofile = image.colorSpace().iccProfile();
+        if (iccprofile.size() > 0) {
+            output_info.uses_original_profile = 1;
+        }
     }
 
     JxlPixelFormat pixel_format;
@@ -445,12 +450,22 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
-    status = JxlEncoderSetColorEncoding(encoder, &color_profile);
-    if (status != JXL_ENC_SUCCESS) {
-        qWarning("JxlEncoderSetColorEncoding failed!");
-        JxlThreadParallelRunnerDestroy(runner);
-        JxlEncoderDestroy(encoder);
-        return false;
+    if (!convert_color_profile && iccprofile.size() > 0) {
+        status = JxlEncoderSetICCProfile(encoder, (const uint8_t *)iccprofile.constData(), iccprofile.size());
+        if (status != JXL_ENC_SUCCESS) {
+            qWarning("JxlEncoderSetICCProfile failed!");
+            JxlThreadParallelRunnerDestroy(runner);
+            JxlEncoderDestroy(encoder);
+            return false;
+        }
+    } else {
+        status = JxlEncoderSetColorEncoding(encoder, &color_profile);
+        if (status != JXL_ENC_SUCCESS) {
+            qWarning("JxlEncoderSetColorEncoding failed!");
+            JxlThreadParallelRunnerDestroy(runner);
+            JxlEncoderDestroy(encoder);
+            return false;
+        }
     }
 
     if (image.hasAlphaChannel()) {
