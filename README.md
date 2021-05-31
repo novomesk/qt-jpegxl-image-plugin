@@ -9,7 +9,7 @@
 
 Qt plug-in to allow Qt and KDE based applications to read/write JXL images.
 
-Work in progress experimental implementation using [libjxl](https://gitlab.com/wg1/jpeg-xl/)
+Work in progress experimental implementation using [libjxl](https://github.com/libjxl/libjxl)
 
 # Installation
 
@@ -19,8 +19,8 @@ Work in progress experimental implementation using [libjxl](https://gitlab.com/w
 
 Code for download and compilation:
 ```
-git clone --depth 1 https://gitlab.com/wg1/jpeg-xl.git --recursive
-cd jpeg-xl
+git clone --depth 1 https://github.com/libjxl/libjxl.git --recursive
+cd libjxl
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DJPEGXL_ENABLE_PLUGINS=ON -DBUILD_TESTING=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DJPEGXL_ENABLE_SJPEG=OFF ..
