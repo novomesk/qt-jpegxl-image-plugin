@@ -4,6 +4,7 @@
 
 1. [Description](#Description)
 2. [Installation](#Installation)
+3. [Test](#Test)
 
 # Description
 
@@ -65,3 +66,23 @@ gwenview jpegxl-logo.jxl
 Expected result:
 
 ![jpegxl-logo.jxl in gwenview](testfiles/gwenview.png)
+
+# Enjoy using JXL in applications
+
+### digiKam
+![JPEG XL in digiKam](imgs/digiKam.png)
+
+### KolourPaint
+![JPEG XL in KolourPaint](imgs/KolourPaint.png)
+
+### KPhotoAlbum
+![JPEG XL in KPhotoAlbum](imgs/KPhotoAlbum.png)
+
+### LXImage-Qt
+![JPEG XL in LXImage-Qt](imgs/LXImage-Qt.png)
+
+### qimgv
+![JPEG XL in qimgv](imgs/qimgv.png)
+
+### qView
+![JPEG XL in qView](imgs/qView.png)
