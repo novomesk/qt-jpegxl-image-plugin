@@ -86,3 +86,6 @@ Expected result:
 
 ### qView
 ![JPEG XL in qView](imgs/qView.png)
+
+### PhotoQt
+![JPEG XL in PhotoQt](imgs/PhotoQt.png)
