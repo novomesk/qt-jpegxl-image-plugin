@@ -89,3 +89,6 @@ Expected result:
 
 ### PhotoQt
 ![JPEG XL in PhotoQt](imgs/PhotoQt.png)
+
+### YACReader
+![JPEG XL in YACReader - Yet Another Comic Reader](imgs/YACReader.png)
