@@ -39,7 +39,7 @@ Check if the `image-jxl.xml` file was installed to `/usr/share/mime/packages/` f
 
 ### 3. Build qt-jpegxl-image-plugin
 
-Make sure that the Qt 5 base development packages (`qt5base-dev` on Debian/Ubuntu) are installed.
+Make sure that the Qt 5 base development packages (`qt5base-dev` on Debian/Ubuntu) are installed. At least Qt 5.14 is required.
 
 Download and build:
 ```
