@@ -20,7 +20,15 @@ include(KDECMakeSettings)
 include(CheckIncludeFiles)
 
 set(REQUIRED_QT_VERSION 5.14.0)
-find_package(Qt5Gui ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
+string(REGEX MATCH "^[0-9]" REQUIRED_QT_MAJOR "${REQUIRED_QT_VERSION}")
+set(QT_MAJOR ${REQUIRED_QT_MAJOR} CACHE STRING "Qt major version to use")
+
+if(QT_MAJOR GREATER_EQUAL ${REQUIRED_QT_MAJOR})
+  message(STATUS "Info: building with Qt${QT_MAJOR}")
+  find_package(Qt${QT_MAJOR}Gui ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
+else()
+  message(FATAL_ERROR "Qt major version must be at least ${REQUIRED_QT_MAJOR}")
+endif()
 
 include(FindPkgConfig)
 pkg_check_modules(LibJXL REQUIRED IMPORTED_TARGET libjxl>=0.5.0)

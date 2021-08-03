@@ -18,7 +18,7 @@ function(kimageformats_add_plugin plugin)
     add_library(${plugin} MODULE ${KIF_ADD_PLUGIN_SOURCES})
     set_property(TARGET ${plugin} APPEND PROPERTY AUTOGEN_TARGET_DEPENDS ${json})
     set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/imageformats")
-    target_link_libraries(${plugin} Qt5::Gui)
+    target_link_libraries(${plugin} Qt${QT_MAJOR}::Gui)
     install(TARGETS ${plugin} DESTINATION ${KDE_INSTALL_QTPLUGINDIR}/imageformats)
 endfunction()
 
