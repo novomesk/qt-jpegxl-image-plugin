@@ -186,6 +186,12 @@ bool QJpegXLHandler::decodeALLFrames()
         return false;
     }
 
+    if (m_basicinfo.uses_original_profile == JXL_FALSE) {
+        JxlColorEncoding color_encoding;
+        JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
+        JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
+    }
+
     QColorSpace colorspace;
     bool loadalpha;
 
