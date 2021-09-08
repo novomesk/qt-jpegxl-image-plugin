@@ -10,7 +10,7 @@ OTHER_FILES = src/jpegxl.json
 
 SOURCES += src/main.cpp
 
-LIBS += libjxl/build/lib/jxl-static.lib libjxl/build/lib/jxl_threads-static.lib libjxl/build/third_party/skcms.lib libjxl/build/third_party/highway/hwy.lib libjxl/build/third_party/brotli/brotlicommon-static.lib libjxl/build/third_party/brotli/brotlidec-static.lib libjxl/build/third_party/brotli/brotlienc-static.lib
+LIBS += libjxl/build/lib/jxl-static.lib libjxl/build/lib/jxl_threads-static.lib libjxl/build/third_party/lcms2.lib libjxl/build/third_party/highway/hwy.lib libjxl/build/third_party/brotli/brotlicommon-static.lib libjxl/build/third_party/brotli/brotlidec-static.lib libjxl/build/third_party/brotli/brotlienc-static.lib
 
 PLUGIN_TYPE = imageformats
 PLUGIN_CLASS_NAME = QJpegXLPlugin

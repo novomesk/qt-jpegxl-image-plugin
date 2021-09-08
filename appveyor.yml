@@ -14,9 +14,9 @@ install:
 
     cd build
 
-    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_SKCMS=ON -DJPEGXL_WARNINGS_AS_ERRORS=OFF ..
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_SKCMS=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF ..
 
-    ninja jxl-static jxl_threads-static hwy skcms brotlicommon-static brotlidec-static brotlienc-static
+    ninja jxl-static jxl_threads-static hwy lcms2 brotlicommon-static brotlidec-static brotlienc-static
 
     cd ..\..
 build_script:
