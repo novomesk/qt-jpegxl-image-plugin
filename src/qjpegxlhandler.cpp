@@ -447,6 +447,8 @@ bool QJpegXLHandler::write(const QImage &image)
     output_info.intensity_target = 255.0f;
     output_info.orientation = JXL_ORIENT_IDENTITY;
     output_info.num_color_channels = 3;
+    output_info.animation.tps_numerator = 10;
+    output_info.animation.tps_denominator = 1;
 
     status = JxlEncoderSetBasicInfo(encoder, &output_info);
     if (status != JXL_ENC_SUCCESS) {
