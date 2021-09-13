@@ -186,8 +186,8 @@ bool QJpegXLHandler::decodeALLFrames()
         return false;
     }
 
+    JxlColorEncoding color_encoding;
     if (m_basicinfo.uses_original_profile == JXL_FALSE) {
-        JxlColorEncoding color_encoding;
         JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
         JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
     }
@@ -232,25 +232,32 @@ bool QJpegXLHandler::decodeALLFrames()
         }
     }
 
-    size_t icc_size = 0;
-    if (JxlDecoderGetICCProfileSize(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
-        if (icc_size > 0) {
-            QByteArray icc_data((int)icc_size, 0);
-            if (JxlDecoderGetColorAsICCProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, (uint8_t *)icc_data.data(), icc_data.size())
-                == JXL_DEC_SUCCESS) {
-                colorspace = QColorSpace::fromIccProfile(icc_data);
+    status = JxlDecoderGetColorAsEncodedProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &color_encoding);
 
-                if (!colorspace.isValid()) {
-                    qWarning("JXL image has Qt-unsupported or invalid ICC profile!");
+    if (status == JXL_DEC_SUCCESS && color_encoding.color_space == JXL_COLOR_SPACE_RGB && color_encoding.white_point == JXL_WHITE_POINT_D65
+        && color_encoding.primaries == JXL_PRIMARIES_SRGB && color_encoding.transfer_function == JXL_TRANSFER_FUNCTION_SRGB) {
+        colorspace = QColorSpace(QColorSpace::SRgb);
+    } else {
+        size_t icc_size = 0;
+        if (JxlDecoderGetICCProfileSize(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
+            if (icc_size > 0) {
+                QByteArray icc_data((int)icc_size, 0);
+                if (JxlDecoderGetColorAsICCProfile(m_decoder, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, (uint8_t *)icc_data.data(), icc_data.size())
+                    == JXL_DEC_SUCCESS) {
+                    colorspace = QColorSpace::fromIccProfile(icc_data);
+
+                    if (!colorspace.isValid()) {
+                        qWarning("JXL image has Qt-unsupported or invalid ICC profile!");
+                    }
+                } else {
+                    qWarning("Failed to obtain data from JPEG XL decoder");
                 }
             } else {
-                qWarning("Failed to obtain data from JPEG XL decoder");
+                qWarning("Empty ICC data");
             }
         } else {
-            qWarning("Empty ICC data");
+            qWarning("no ICC, other color profile");
         }
-    } else {
-        qWarning("no ICC, other color profile");
     }
 
     JxlFrameHeader frame_header;
