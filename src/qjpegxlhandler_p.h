@@ -2,11 +2,11 @@
 #define QJPEGXLHANDLER_P_H
 
 #include <QByteArray>
+#include <QColorSpace>
 #include <QImage>
-#include <QList>
-#include <QPair>
+#include <QImageIOHandler>
 #include <QVariant>
-#include <qimageiohandler.h>
+#include <QVector>
 
 #include <jxl/decode.h>
 
@@ -37,9 +37,11 @@ public:
 
 private:
     bool ensureParsed() const;
-    bool ensureALLDecoded() const;
+    bool ensureALLCounted() const;
     bool ensureDecoder();
-    bool decodeALLFrames();
+    bool countALLFrames();
+    bool decode_one_frame();
+    bool rewind();
 
     enum ParseJpegXLState {
         ParseJpegXLError = -1,
@@ -51,6 +53,7 @@ private:
     ParseJpegXLState m_parseState;
     int m_quality;
     int m_currentimage_index;
+    int m_previousimage_index;
 
     QByteArray m_rawData;
 
@@ -58,8 +61,17 @@ private:
     void *m_runner;
     JxlBasicInfo m_basicinfo;
 
-    QList<QPair<QImage, int>> m_frames;
+    QVector<int> m_framedelays;
     int m_next_image_delay;
+
+    QImage m_current_image;
+    QColorSpace m_colorspace;
+
+    QImage::Format m_input_image_format;
+    QImage::Format m_target_image_format;
+
+    JxlPixelFormat m_input_pixel_format;
+    size_t m_buffer_size;
 };
 
 #endif // QJPEGXLHANDLER_P_H
