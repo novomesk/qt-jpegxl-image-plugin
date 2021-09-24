@@ -770,10 +770,29 @@ bool QJpegXLHandler::rewind()
         return false;
     }
 
-    if (JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_FULL_IMAGE) != JXL_DEC_SUCCESS) {
-        qWarning("ERROR: JxlDecoderSubscribeEvents failed");
-        m_parseState = ParseJpegXLError;
-        return false;
+    if (m_basicinfo.uses_original_profile) {
+        if (JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_FULL_IMAGE) != JXL_DEC_SUCCESS) {
+            qWarning("ERROR: JxlDecoderSubscribeEvents failed");
+            m_parseState = ParseJpegXLError;
+            return false;
+        }
+    } else {
+        if (JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE) != JXL_DEC_SUCCESS) {
+            qWarning("ERROR: JxlDecoderSubscribeEvents failed");
+            m_parseState = ParseJpegXLError;
+            return false;
+        }
+
+        JxlDecoderStatus status = JxlDecoderProcessInput(m_decoder);
+        if (status != JXL_DEC_COLOR_ENCODING) {
+            qWarning("Unexpected event %d instead of JXL_DEC_COLOR_ENCODING", status);
+            m_parseState = ParseJpegXLError;
+            return false;
+        }
+
+        JxlColorEncoding color_encoding;
+        JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
+        JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
     }
 
     return true;
