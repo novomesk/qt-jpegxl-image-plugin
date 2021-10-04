@@ -1,4 +1,4 @@
-version: 0.2.{build}
+version: 0.3.0.{build}
 environment:
   CC: cl.exe
   CXX: cl.exe
@@ -6,7 +6,7 @@ install:
 - cmd: >-
     call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    git clone --depth 1 https://github.com/libjxl/libjxl.git --recursive
+    git clone --depth 1 --branch v0.6.x https://github.com/libjxl/libjxl.git --recursive
 
     cd libjxl
 
