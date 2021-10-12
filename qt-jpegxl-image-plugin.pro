@@ -6,7 +6,7 @@ OTHER_FILES = src/jpegxl.json
 
 SOURCES += src/main.cpp
 
-LIBS += -ljxl -ljxl_threads -lbrotlicommon -lbrotlienc -lbrotlidec
+LIBS += -ljxl -lbrotlicommon -lbrotlienc -lbrotlidec
 
 PLUGIN_TYPE = imageformats
 PLUGIN_CLASS_NAME = QJpegXLPlugin
