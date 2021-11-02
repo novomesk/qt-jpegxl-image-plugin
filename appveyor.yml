@@ -1,4 +1,4 @@
-version: 0.3.1.{build}
+version: 0.3.2.{build}
 environment:
   CC: cl.exe
   CXX: cl.exe
@@ -16,7 +16,7 @@ install:
 
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DJPEGXL_STATIC=ON -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_SKCMS=ON -DJPEGXL_BUNDLE_SKCMS=ON -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DCMAKE_C_FLAGS="-DJXL_STATIC_DEFINE -DJXL_THREADS_STATIC_DEFINE" -DCMAKE_CXX_FLAGS="-DJXL_STATIC_DEFINE -DJXL_THREADS_STATIC_DEFINE" ..
 
-    ninja jxl-static hwy brotlicommon-static brotlidec-static brotlienc-static
+    ninja jxl-static jxl_threads-static hwy brotlicommon-static brotlidec-static brotlienc-static
 
     cd ..\..
 build_script:
