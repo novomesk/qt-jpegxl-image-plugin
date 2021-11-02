@@ -58,6 +58,7 @@ private:
     QByteArray m_rawData;
 
     JxlDecoder *m_decoder;
+    void *m_runner;
     JxlBasicInfo m_basicinfo;
 
     QVector<int> m_framedelays;
