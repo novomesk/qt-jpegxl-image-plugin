@@ -175,6 +175,15 @@ bool QJpegXLHandler::ensureDecoder()
         qWarning("JXL image (%dx%d) is too large", m_basicinfo.xsize, m_basicinfo.ysize);
         m_parseState = ParseJpegXLError;
         return false;
+    } else if (sizeof(void *) <= 4) {
+        /* On 32bit systems, there is limited address space.
+         * We skip imagess bigger than 8192 x 8192 pixels.
+         * If we don't do it, abort() in libjxl may close whole application */
+        if ((m_basicinfo.xsize * m_basicinfo.ysize) > 67108864) {
+            qWarning("JXL image (%dx%d) is too large for 32bit build of the plug-in", m_basicinfo.xsize, m_basicinfo.ysize);
+            m_parseState = ParseJpegXLError;
+            return false;
+        }
     }
 
     m_parseState = ParseJpegXLBasicInfoParsed;
