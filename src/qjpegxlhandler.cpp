@@ -432,7 +432,7 @@ bool QJpegXLHandler::write(const QImage &image)
         }
     }
 
-    JxlEncoderOptions *encoder_options = JxlEncoderOptionsCreate(encoder, nullptr);
+    JxlEncoderFrameSettings *encoder_options = JxlEncoderFrameSettingsCreate(encoder, nullptr);
 
     if (m_quality > 100) {
         m_quality = 100;
@@ -440,9 +440,9 @@ bool QJpegXLHandler::write(const QImage &image)
         m_quality = 90;
     }
 
-    JxlEncoderOptionsSetDistance(encoder_options, (100.0f - m_quality) / 10.0f);
+    JxlEncoderSetFrameDistance(encoder_options, (100.0f - m_quality) / 10.0f);
 
-    JxlEncoderOptionsSetLossless(encoder_options, (m_quality == 100) ? JXL_TRUE : JXL_FALSE);
+    JxlEncoderSetFrameLossless(encoder_options, (m_quality == 100) ? JXL_TRUE : JXL_FALSE);
 
     JxlBasicInfo output_info;
     JxlEncoderInitBasicInfo(&output_info);

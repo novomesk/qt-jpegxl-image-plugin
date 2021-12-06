@@ -23,8 +23,8 @@ set(REQUIRED_QT_VERSION 5.14.0)
 find_package(Qt5Gui ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
 
 include(FindPkgConfig)
-pkg_check_modules(LibJXL REQUIRED IMPORTED_TARGET libjxl>=0.6.1)
-pkg_check_modules(LibJXLThreads REQUIRED IMPORTED_TARGET libjxl_threads>=0.6.1)
+pkg_check_modules(LibJXL REQUIRED IMPORTED_TARGET libjxl>=0.7.0)
+pkg_check_modules(LibJXLThreads REQUIRED IMPORTED_TARGET libjxl_threads>=0.7.0)
 
 add_definitions(-DQT_NO_FOREACH)
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050c00)
