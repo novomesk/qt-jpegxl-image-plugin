@@ -1,0 +1,7 @@
+.moc/
+.obj/
+.qmake.stash
+Makefile
+lib/
+mkspecs/
+plugins/
