@@ -12,6 +12,8 @@ Qt plug-in to allow Qt and KDE based applications to read/write JXL images.
 
 Work in progress experimental implementation using [libjxl](https://github.com/libjxl/libjxl)
 
+**kimageformats 5.89** contains almost identical plug-in like this one already. If you have `kimg_jxl.so` installed, don’t install qt-jpegxl-image-plugin. If your distribution maintainer built kimageformats without JPEG XL support, you may install qt-jpegxl-image-plugin. It is not recommended to have `libqjpegxl.so` and `kimg_jxl.so` installed at the same time.
+
 # Installation
 
 ### 1. Clone, build and install JPEG-XL
