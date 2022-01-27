@@ -74,6 +74,9 @@ Expected result:
 ### digiKam
 ![JPEG XL in digiKam](imgs/digiKam.png)
 
+JPEG XL support has to be explicitly enabled in digiKam. Go to Settings -> Configure digikam -> Views -> Mime Types and add `jxl` to the to the Additional image file extensions field:
+![How to enable JXL extension in digiKam](imgs/digiKam2.png)
+
 ### KolourPaint
 ![JPEG XL in KolourPaint](imgs/KolourPaint.png)
 
