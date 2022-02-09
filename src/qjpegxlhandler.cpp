@@ -171,16 +171,27 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
-    if (m_basicinfo.xsize > 32768 || m_basicinfo.ysize > 32768) {
+    if (m_basicinfo.xsize > 65535 || m_basicinfo.ysize > 65535) {
         qWarning("JXL image (%dx%d) is too large", m_basicinfo.xsize, m_basicinfo.ysize);
         m_parseState = ParseJpegXLError;
         return false;
-    } else if (sizeof(void *) <= 4) {
+    }
+
+    if (sizeof(void *) <= 4) {
         /* On 32bit systems, there is limited address space.
          * We skip imagess bigger than 8192 x 8192 pixels.
          * If we don't do it, abort() in libjxl may close whole application */
-        if ((m_basicinfo.xsize * m_basicinfo.ysize) > 67108864) {
+        if (m_basicinfo.xsize > ((8192 * 8192) / m_basicinfo.ysize)) {
             qWarning("JXL image (%dx%d) is too large for 32bit build of the plug-in", m_basicinfo.xsize, m_basicinfo.ysize);
+            m_parseState = ParseJpegXLError;
+            return false;
+        }
+    } else {
+        /* On 64bit systems
+         * We skip images bigger than 16384 x 16384 pixels.
+         * It is an artificial limit not to use extreme amount of memory */
+        if (m_basicinfo.xsize > ((16384 * 16384) / m_basicinfo.ysize)) {
+            qWarning("JXL image (%dx%d) is bigger than security limit 256 megapixels", m_basicinfo.xsize, m_basicinfo.ysize);
             m_parseState = ParseJpegXLError;
             return false;
         }
@@ -408,8 +419,25 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
-    if ((image.width() > 32768) || (image.height() > 32768)) {
-        qWarning("Image is too large");
+    if ((image.width() > 0) && (image.height() > 0)) {
+        if ((image.width() > 65535) || (image.height() > 65535)) {
+            qWarning("Image (%dx%d) is too large to save!", image.width(), image.height());
+            return false;
+        }
+
+        if (sizeof(void *) <= 4) {
+            if (image.width() > ((8192 * 8192) / image.height())) {
+                qWarning("Image (%dx%d) is too large save via 32bit build of JXL plug-in", image.width(), image.height());
+                return false;
+            }
+        } else {
+            if (image.width() > ((16384 * 16384) / image.height())) {
+                qWarning("Image (%dx%d) will not be saved because it has more than 256 megapixels", image.width(), image.height());
+                return false;
+            }
+        }
+    } else {
+        qWarning("Image has zero dimension!");
         return false;
     }
 
@@ -453,16 +481,16 @@ bool QJpegXLHandler::write(const QImage &image)
     bool convert_color_profile;
     QByteArray iccprofile;
 
-    if (image.colorSpace().isValid()) {
+    if (image.colorSpace().isValid() && (m_quality < 100)) {
         if (image.colorSpace().primaries() != QColorSpace::Primaries::SRgb || image.colorSpace().transferFunction() != QColorSpace::TransferFunction::SRgb) {
             convert_color_profile = true;
         } else {
             convert_color_profile = false;
         }
-    } else { // no profile or Qt-unsupported ICC profile
+    } else { // lossless or no profile or Qt-unsupported ICC profile
         convert_color_profile = false;
         iccprofile = image.colorSpace().iccProfile();
-        if (iccprofile.size() > 0) {
+        if (iccprofile.size() > 0 || m_quality == 100) {
             output_info.uses_original_profile = 1;
         }
     }
