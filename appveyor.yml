@@ -21,23 +21,16 @@ install:
     cd ..\..
 build_script:
 - cmd: >-
-    C:\Qt\5.14.2\msvc2017_64\bin\qmake.exe qt-jpegxl-image-plugin_appveyor.pro
+    C:\Qt\5.15.2\msvc2019_64\bin\qmake.exe qt-jpegxl-image-plugin_appveyor.pro
 
     nmake
 
-    cd qtbuild_5.15.2
+    cd qtbuild_6.2.4
 
-    C:\Qt\5.15.2\msvc2019_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
-
-    nmake
-
-    cd ..\qtbuild_6.2.2
-
-    C:\Qt\6.2.2\msvc2019_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
+    C:\Qt\6.2.4\msvc2019_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
 
     nmake
 
 artifacts:
 - path: plugins\imageformats\qjpegxl.dll
-- path: qtbuild_5.15.2\plugins\imageformats\qjpegxl.dll
-- path: qtbuild_6.2.2\plugins\imageformats\qjpegxl.dll
+- path: qtbuild_6.2.4\plugins\imageformats\qjpegxl.dll
