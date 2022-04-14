@@ -479,6 +479,21 @@ bool QJpegXLHandler::write(const QImage &image)
         return false;
     }
 
+    if (m_quality > 100) {
+        m_quality = 100;
+    } else if (m_quality < 0) {
+        m_quality = 90;
+    }
+
+    JxlBasicInfo output_info;
+    JxlEncoderInitBasicInfo(&output_info);
+
+    if (save_depth == 16 && m_quality == 100) {
+        output_info.have_container = JXL_TRUE;
+        JxlEncoderUseContainer(encoder, JXL_TRUE);
+        JxlEncoderSetCodestreamLevel(encoder, 10);
+    }
+
     void *runner = nullptr;
     int num_worker_threads = qBound(1, QThread::idealThreadCount(), 64);
 
@@ -494,18 +509,9 @@ bool QJpegXLHandler::write(const QImage &image)
 
     JxlEncoderFrameSettings *encoder_options = JxlEncoderFrameSettingsCreate(encoder, nullptr);
 
-    if (m_quality > 100) {
-        m_quality = 100;
-    } else if (m_quality < 0) {
-        m_quality = 90;
-    }
-
     JxlEncoderSetFrameDistance(encoder_options, (100.0f - m_quality) / 10.0f);
 
     JxlEncoderSetFrameLossless(encoder_options, (m_quality == 100) ? JXL_TRUE : JXL_FALSE);
-
-    JxlBasicInfo output_info;
-    JxlEncoderInitBasicInfo(&output_info);
 
     JxlColorEncoding color_profile;
     JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
