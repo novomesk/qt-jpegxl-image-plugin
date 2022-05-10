@@ -140,6 +140,8 @@ bool QJpegXLHandler::ensureDecoder()
         return false;
     }
 
+    JxlDecoderCloseInput(m_decoder);
+
     JxlDecoderStatus status = JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FRAME);
     if (status == JXL_DEC_ERROR) {
         qWarning("ERROR: JxlDecoderSubscribeEvents failed");
@@ -917,6 +919,8 @@ bool QJpegXLHandler::rewind()
         m_parseState = ParseJpegXLError;
         return false;
     }
+
+    JxlDecoderCloseInput(m_decoder);
 
     if (m_basicinfo.uses_original_profile) {
         if (JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_FULL_IMAGE) != JXL_DEC_SUCCESS) {
