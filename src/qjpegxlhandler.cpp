@@ -533,7 +533,6 @@ bool QJpegXLHandler::write(const QImage &image)
     pixel_format.endianness = JXL_NATIVE_ENDIAN;
     pixel_format.align = 0;
 
-    output_info.intensity_target = 255.0f;
     output_info.orientation = JXL_ORIENT_IDENTITY;
     output_info.num_color_channels = 3;
     output_info.animation.tps_numerator = 10;
