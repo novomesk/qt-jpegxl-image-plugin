@@ -490,7 +490,24 @@ bool QJpegXLHandler::write(const QImage &image)
     JxlBasicInfo output_info;
     JxlEncoderInitBasicInfo(&output_info);
 
-    if (save_depth == 16 && m_quality == 100) {
+    bool convert_color_profile;
+    QByteArray iccprofile;
+
+    if (image.colorSpace().isValid() && (m_quality < 100)) {
+        if (image.colorSpace().primaries() != QColorSpace::Primaries::SRgb || image.colorSpace().transferFunction() != QColorSpace::TransferFunction::SRgb) {
+            convert_color_profile = true;
+        } else {
+            convert_color_profile = false;
+        }
+    } else { // lossless or no profile or Qt-unsupported ICC profile
+        convert_color_profile = false;
+        iccprofile = image.colorSpace().iccProfile();
+        if (iccprofile.size() > 0 || m_quality == 100) {
+            output_info.uses_original_profile = JXL_TRUE;
+        }
+    }
+
+    if (save_depth == 16 && (image.hasAlphaChannel() || output_info.uses_original_profile)) {
         output_info.have_container = JXL_TRUE;
         JxlEncoderUseContainer(encoder, JXL_TRUE);
         JxlEncoderSetCodestreamLevel(encoder, 10);
@@ -506,32 +523,6 @@ bool QJpegXLHandler::write(const QImage &image)
             JxlThreadParallelRunnerDestroy(runner);
             JxlEncoderDestroy(encoder);
             return false;
-        }
-    }
-
-    JxlEncoderFrameSettings *encoder_options = JxlEncoderFrameSettingsCreate(encoder, nullptr);
-
-    JxlEncoderSetFrameDistance(encoder_options, (100.0f - m_quality) / 10.0f);
-
-    JxlEncoderSetFrameLossless(encoder_options, (m_quality == 100) ? JXL_TRUE : JXL_FALSE);
-
-    JxlColorEncoding color_profile;
-    JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
-
-    bool convert_color_profile;
-    QByteArray iccprofile;
-
-    if (image.colorSpace().isValid() && (m_quality < 100)) {
-        if (image.colorSpace().primaries() != QColorSpace::Primaries::SRgb || image.colorSpace().transferFunction() != QColorSpace::TransferFunction::SRgb) {
-            convert_color_profile = true;
-        } else {
-            convert_color_profile = false;
-        }
-    } else { // lossless or no profile or Qt-unsupported ICC profile
-        convert_color_profile = false;
-        iccprofile = image.colorSpace().iccProfile();
-        if (iccprofile.size() > 0 || m_quality == 100) {
-            output_info.uses_original_profile = 1;
         }
     }
 
@@ -620,6 +611,9 @@ bool QJpegXLHandler::write(const QImage &image)
             return false;
         }
     } else {
+        JxlColorEncoding color_profile;
+        JxlColorEncodingSetToSRGB(&color_profile, JXL_FALSE);
+
         status = JxlEncoderSetColorEncoding(encoder, &color_profile);
         if (status != JXL_ENC_SUCCESS) {
             qWarning("JxlEncoderSetColorEncoding failed!");
@@ -630,6 +624,12 @@ bool QJpegXLHandler::write(const QImage &image)
             return false;
         }
     }
+
+    JxlEncoderFrameSettings *encoder_options = JxlEncoderFrameSettingsCreate(encoder, nullptr);
+
+    JxlEncoderSetFrameDistance(encoder_options, (100.0f - m_quality) / 10.0f);
+
+    JxlEncoderSetFrameLossless(encoder_options, (m_quality == 100) ? JXL_TRUE : JXL_FALSE);
 
     if (image.hasAlphaChannel() || ((save_depth == 8) && (xsize % 4 == 0))) {
         status = JxlEncoderAddImageFrame(encoder_options, &pixel_format, (void *)tmpimage.constBits(), buffer_size);
