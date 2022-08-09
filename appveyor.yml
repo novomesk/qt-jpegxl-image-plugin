@@ -6,7 +6,7 @@ install:
 - cmd: >-
     call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    git clone --depth 1 https://github.com/libjxl/libjxl.git --recursive
+    git clone --depth 1 -b v0.7.x https://github.com/libjxl/libjxl.git --recursive
 
     cd libjxl
 
