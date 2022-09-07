@@ -7,6 +7,8 @@
 #include <QtGlobal>
 
 #include "qjpegxlhandler_p.h"
+#include "util_p.h"
+
 #include <jxl/encode.h>
 #include <jxl/thread_parallel_runner.h>
 #include <string.h>
@@ -354,7 +356,7 @@ bool QJpegXLHandler::decode_one_frame()
         return false;
     }
 
-    m_current_image = QImage(m_basicinfo.xsize, m_basicinfo.ysize, m_input_image_format);
+    m_current_image = imageAlloc(m_basicinfo.xsize, m_basicinfo.ysize, m_input_image_format);
     if (m_current_image.isNull()) {
         qWarning("Memory cannot be allocated");
         m_parseState = ParseJpegXLError;

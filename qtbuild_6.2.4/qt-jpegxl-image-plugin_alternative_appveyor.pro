@@ -4,7 +4,7 @@ DEFINES += JXL_STATIC_DEFINE JXL_THREADS_STATIC_DEFINE
 
 INCLUDEPATH += ../libjxl/lib/include ../libjxl/build/lib/include
 
-HEADERS = ../src/qjpegxlhandler_p.h
+HEADERS = ../src/qjpegxlhandler_p.h ../src/util_p.h
 SOURCES = ../src/qjpegxlhandler.cpp
 OTHER_FILES = ../src/jpegxl.json
 

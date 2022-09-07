@@ -1,6 +1,6 @@
 TARGET = qjpegxl
 
-HEADERS = src/qjpegxlhandler_p.h
+HEADERS = src/qjpegxlhandler_p.h src/util_p.h
 SOURCES = src/qjpegxlhandler.cpp
 OTHER_FILES = src/jpegxl.json
 
