@@ -730,7 +730,7 @@ bool QJpegXLHandler::write(const QImage &image)
     compressed.resize(next_out - compressed.data());
 
     if (compressed.size() > 0) {
-        qint64 write_status = device()->write((const char *)compressed.data(), compressed.size());
+        qint64 write_status = device()->write(reinterpret_cast<const char *>(compressed.data()), compressed.size());
 
         if (write_status > 0) {
             return true;
