@@ -48,6 +48,7 @@ private:
         ParseJpegXLNotParsed = 0,
         ParseJpegXLSuccess = 1,
         ParseJpegXLBasicInfoParsed = 2,
+        ParseJpegXLFinished = 3,
     };
 
     ParseJpegXLState m_parseState;
