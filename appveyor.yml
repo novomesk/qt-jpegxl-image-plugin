@@ -1,4 +1,4 @@
-version: 0.3.2.{build}
+version: 0.4.1.{build}
 environment:
   CC: cl.exe
   CXX: cl.exe
