@@ -264,18 +264,31 @@ bool QJpegXLHandler::countALLFrames()
         }
     }
 
-    status = JxlDecoderGetColorAsEncodedProfile(m_decoder, &m_input_pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &color_encoding);
+    status = JxlDecoderGetColorAsEncodedProfile(m_decoder,
+#if JPEGXL_NUMERIC_VERSION < JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
+                                                &m_input_pixel_format,
+#endif
+                                                JXL_COLOR_PROFILE_TARGET_DATA,
+                                                &color_encoding);
 
     if (status == JXL_DEC_SUCCESS && color_encoding.color_space == JXL_COLOR_SPACE_RGB && color_encoding.white_point == JXL_WHITE_POINT_D65
         && color_encoding.primaries == JXL_PRIMARIES_SRGB && color_encoding.transfer_function == JXL_TRANSFER_FUNCTION_SRGB) {
         m_colorspace = QColorSpace(QColorSpace::SRgb);
     } else {
         size_t icc_size = 0;
-        if (JxlDecoderGetICCProfileSize(m_decoder, &m_input_pixel_format, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
+        if (JxlDecoderGetICCProfileSize(m_decoder,
+#if JPEGXL_NUMERIC_VERSION < JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
+                                        &m_input_pixel_format,
+#endif
+                                        JXL_COLOR_PROFILE_TARGET_DATA,
+                                        &icc_size)
+            == JXL_DEC_SUCCESS) {
             if (icc_size > 0) {
                 QByteArray icc_data(icc_size, 0);
                 if (JxlDecoderGetColorAsICCProfile(m_decoder,
+#if JPEGXL_NUMERIC_VERSION < JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
                                                    &m_input_pixel_format,
+#endif
                                                    JXL_COLOR_PROFILE_TARGET_DATA,
                                                    reinterpret_cast<uint8_t *>(icc_data.data()),
                                                    icc_data.size())
