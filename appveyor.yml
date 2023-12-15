@@ -1,4 +1,4 @@
-version: 0.4.3.{build}
+version: 0.5.0.{build}
 environment:
   CC: cl.exe
   CXX: cl.exe
@@ -6,7 +6,7 @@ install:
 - cmd: >-
     call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    git clone --depth 1 -b v0.8.x https://github.com/libjxl/libjxl.git --recursive
+    git clone --depth 1 -b v0.9.x https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
 
     cd libjxl
 
@@ -16,7 +16,7 @@ install:
 
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DJPEGXL_STATIC=ON -DBUILD_TESTING=OFF -DJPEGXL_ENABLE_TOOLS=OFF -DJPEGXL_ENABLE_DOXYGEN=OFF -DJPEGXL_ENABLE_MANPAGES=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_SKCMS=ON -DJPEGXL_BUNDLE_SKCMS=ON -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DJPEGXL_ENABLE_JPEGLI=OFF -DJPEGXL_ENABLE_JPEGLI_LIBJPEG=OFF -DCMAKE_C_FLAGS="-DJXL_STATIC_DEFINE -DJXL_THREADS_STATIC_DEFINE" -DCMAKE_CXX_FLAGS="-DJXL_STATIC_DEFINE -DJXL_THREADS_STATIC_DEFINE" ..
 
-    ninja jxl-static jxl_threads-static hwy brotlicommon-static brotlidec-static brotlienc-static
+    ninja jxl-static jxl_threads-static hwy brotlicommon brotlidec brotlienc
 
     cd ..\..
 build_script:
