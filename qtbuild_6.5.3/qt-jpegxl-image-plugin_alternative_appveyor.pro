@@ -1,4 +1,4 @@
-TARGET = qjpegxl
+TARGET = qjpegxl6
 
 DEFINES += JXL_STATIC_DEFINE JXL_THREADS_STATIC_DEFINE
 
@@ -12,14 +12,14 @@ SOURCES += ../src/main.cpp
 
 LIBS_PRIVATE += ../libjxl/build/lib/jxl-static.lib ../libjxl/build/lib/jxl_threads-static.lib ../libjxl/build/third_party/highway/hwy.lib ../libjxl/build/third_party/brotli/brotlidec.lib ../libjxl/build/third_party/brotli/brotlienc.lib ../libjxl/build/third_party/brotli/brotlicommon.lib
 
-PLUGIN_TYPE = imageformats
-PLUGIN_CLASS_NAME = QJpegXLPlugin
-load(qt_plugin)
+TEMPLATE = lib
 
-CONFIG += release skip_target_version_ext c++14 warn_on
+CONFIG += release skip_target_version_ext c++14 warn_on plugin
 CONFIG -= separate_debug_info debug debug_and_release force_debug_info
 
+win32:VERSION = 0.5.0
 QMAKE_TARGET_COMPANY = "Daniel Novomesky"
 QMAKE_TARGET_PRODUCT = "qt-jpegxl-image-plugin"
 QMAKE_TARGET_DESCRIPTION = "Qt plug-in to allow Qt and KDE based applications to read/write JPEG XL images."
 QMAKE_TARGET_COPYRIGHT = "Copyright (C) 2020-2023 Daniel Novomesky"
+QMAKE_TARGET_COMMENTS = "Build using Qt 6.5.3"

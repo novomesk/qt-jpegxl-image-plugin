@@ -25,12 +25,12 @@ build_script:
 
     nmake
 
-    cd qtbuild_6.2.4
+    cd qtbuild_6.5.3
 
-    C:\Qt\6.2.4\msvc2019_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
+    C:\Qt\6.5.3\msvc2019_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
 
     nmake
 
 artifacts:
-- path: plugins\imageformats\qjpegxl.dll
-- path: qtbuild_6.2.4\plugins\imageformats\qjpegxl.dll
+- path: plugins\imageformats\*.dll
+- path: qtbuild_6.5.3\*.dll
