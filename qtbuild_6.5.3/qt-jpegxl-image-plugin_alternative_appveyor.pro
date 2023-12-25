@@ -10,7 +10,7 @@ OTHER_FILES = ../src/jpegxl.json
 
 SOURCES += ../src/main.cpp
 
-LIBS_PRIVATE += ../libjxl/build/lib/jxl-static.lib ../libjxl/build/lib/jxl_threads-static.lib ../libjxl/build/third_party/highway/hwy.lib ../libjxl/build/third_party/brotli/brotlidec.lib ../libjxl/build/third_party/brotli/brotlienc.lib ../libjxl/build/third_party/brotli/brotlicommon.lib
+LIBS_PRIVATE += ../libjxl/build/lib/jxl.lib ../libjxl/build/lib/jxl_cms.lib ../libjxl/build/lib/jxl_threads.lib ../libjxl/build/third_party/highway/hwy.lib ../libjxl/build/third_party/brotli/brotlidec.lib ../libjxl/build/third_party/brotli/brotlienc.lib ../libjxl/build/third_party/brotli/brotlicommon.lib ../libjxl/build/third_party/skcms.lib
 
 TEMPLATE = lib
 
