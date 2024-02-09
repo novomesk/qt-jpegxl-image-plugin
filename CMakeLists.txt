@@ -23,6 +23,7 @@ find_package(Qt${QT_MAJOR_VERSION}Gui ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE)
 include(FindPkgConfig)
 pkg_check_modules(LibJXL REQUIRED IMPORTED_TARGET libjxl>=0.7.0)
 pkg_check_modules(LibJXLThreads REQUIRED IMPORTED_TARGET libjxl_threads>=0.7.0)
+pkg_check_modules(LibJXLCMS IMPORTED_TARGET libjxl_cms>=0.9.0)
 
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050f02)
 add_definitions(-DKF_DISABLE_DEPRECATED_BEFORE_AND_AT=0x055900)
