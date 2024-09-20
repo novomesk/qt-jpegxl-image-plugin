@@ -7,7 +7,7 @@ install:
 - cmd: >-
     call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    git clone --depth 1 -b v0.10.x https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
+    git clone --depth 1 -b v0.11.x https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
 
     cd libjxl
 
