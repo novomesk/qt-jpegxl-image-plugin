@@ -11,6 +11,11 @@
 
 #include <jxl/encode.h>
 #include <jxl/thread_parallel_runner.h>
+
+#if JPEGXL_NUMERIC_VERSION > JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
+#include <jxl/cms.h>
+#endif
+
 #include <string.h>
 
 QJpegXLHandler::QJpegXLHandler()
@@ -225,7 +230,18 @@ bool QJpegXLHandler::countALLFrames()
     }
 
     JxlColorEncoding color_encoding;
-    if (m_basicinfo.uses_original_profile == JXL_FALSE) {
+    if (m_basicinfo.uses_original_profile == JXL_FALSE && m_basicinfo.have_animation == JXL_FALSE) {
+#if JPEGXL_NUMERIC_VERSION > JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
+        const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
+        if (jxlcms) {
+            status = JxlDecoderSetCms(m_decoder, *jxlcms);
+            if (status != JXL_DEC_SUCCESS) {
+                qWarning("JxlDecoderSetCms ERROR");
+            }
+        } else {
+            qWarning("No JPEG XL CMS Interface");
+        }
+#endif
         JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
         JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
     }
@@ -957,7 +973,7 @@ bool QJpegXLHandler::rewind()
 
     JxlDecoderCloseInput(m_decoder);
 
-    if (m_basicinfo.uses_original_profile) {
+    if (m_basicinfo.uses_original_profile || m_basicinfo.have_animation) {
         if (JxlDecoderSubscribeEvents(m_decoder, JXL_DEC_FULL_IMAGE) != JXL_DEC_SUCCESS) {
             qWarning("ERROR: JxlDecoderSubscribeEvents failed");
             m_parseState = ParseJpegXLError;
@@ -976,6 +992,18 @@ bool QJpegXLHandler::rewind()
             m_parseState = ParseJpegXLError;
             return false;
         }
+
+#if JPEGXL_NUMERIC_VERSION > JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
+        const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
+        if (jxlcms) {
+            status = JxlDecoderSetCms(m_decoder, *jxlcms);
+            if (status != JXL_DEC_SUCCESS) {
+                qWarning("JxlDecoderSetCms ERROR");
+            }
+        } else {
+            qWarning("No JPEG XL CMS Interface");
+        }
+#endif
 
         JxlColorEncoding color_encoding;
         JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
