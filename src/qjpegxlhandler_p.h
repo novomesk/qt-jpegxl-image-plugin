@@ -67,12 +67,14 @@ private:
 
     QImage m_current_image;
     QColorSpace m_colorspace;
+    bool m_isCMYK;
+    uint32_t m_cmyk_channel_id;
+    uint32_t m_alpha_channel_id;
 
     QImage::Format m_input_image_format;
     QImage::Format m_target_image_format;
 
     JxlPixelFormat m_input_pixel_format;
-    size_t m_buffer_size;
 };
 
 #endif // QJPEGXLHANDLER_P_H
