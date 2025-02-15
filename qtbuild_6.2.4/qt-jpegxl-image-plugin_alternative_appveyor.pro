@@ -21,5 +21,5 @@ win32:VERSION = 0.7.0
 QMAKE_TARGET_COMPANY = "Daniel Novomesky"
 QMAKE_TARGET_PRODUCT = "qt-jpegxl-image-plugin"
 QMAKE_TARGET_DESCRIPTION = "Qt plug-in to allow Qt and KDE based applications to read/write JPEG XL images."
-QMAKE_TARGET_COPYRIGHT = "Copyright (C) 2020-2024 Daniel Novomesky"
+QMAKE_TARGET_COPYRIGHT = "Copyright (C) 2020-2025 Daniel Novomesky"
 QMAKE_TARGET_COMMENTS = "Build using Qt 6.2.4"
