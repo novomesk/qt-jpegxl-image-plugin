@@ -1,4 +1,4 @@
-version: 0.8.1.{build}
+version: 0.8.2.{build}
 image: Visual Studio 2022
 environment:
   CC: cl.exe
@@ -34,13 +34,13 @@ build_script:
 
     nmake
 
-    cd ..\qtbuild_6.9.2
+    cd ..\qtbuild_6.9.3
 
-    C:\Qt\6.9.2\msvc2022_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
+    C:\Qt\6.9.3\msvc2022_64\bin\qmake.exe qt-jpegxl-image-plugin_alternative_appveyor.pro
 
     nmake
 
 artifacts:
 - path: qtbuild_6.5.3\*.dll
 - path: qtbuild_6.8.3\*.dll
-- path: qtbuild_6.9.2\*.dll
+- path: qtbuild_6.9.3\*.dll
