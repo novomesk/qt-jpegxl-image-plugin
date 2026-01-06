@@ -235,14 +235,16 @@ bool QJpegXLHandler::countALLFrames()
     JxlColorEncoding color_encoding;
     if (m_basicinfo.uses_original_profile == JXL_FALSE && m_basicinfo.have_animation == JXL_FALSE) {
 #if JPEGXL_NUMERIC_VERSION > JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
-        const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
-        if (jxlcms) {
-            status = JxlDecoderSetCms(m_decoder, *jxlcms);
-            if (status != JXL_DEC_SUCCESS) {
-                qWarning("JxlDecoderSetCms ERROR");
+        if (!is_gray) {
+            const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
+            if (jxlcms) {
+                status = JxlDecoderSetCms(m_decoder, *jxlcms);
+                if (status != JXL_DEC_SUCCESS) {
+                    qWarning("JxlDecoderSetCms ERROR");
+                }
+            } else {
+                qWarning("No JPEG XL CMS Interface");
             }
-        } else {
-            qWarning("No JPEG XL CMS Interface");
         }
 #endif
         JxlColorEncodingSetToSRGB(&color_encoding, is_gray ? JXL_TRUE : JXL_FALSE);
@@ -1770,19 +1772,21 @@ bool QJpegXLHandler::rewind()
             return false;
         }
 
+        bool is_gray = m_basicinfo.num_color_channels == 1 && m_basicinfo.alpha_bits == 0;
 #if JPEGXL_NUMERIC_VERSION > JPEGXL_COMPUTE_NUMERIC_VERSION(0, 9, 0)
-        const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
-        if (jxlcms) {
-            status = JxlDecoderSetCms(m_decoder, *jxlcms);
-            if (status != JXL_DEC_SUCCESS) {
-                qWarning("JxlDecoderSetCms ERROR");
+        if (!is_gray) {
+            const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
+            if (jxlcms) {
+                status = JxlDecoderSetCms(m_decoder, *jxlcms);
+                if (status != JXL_DEC_SUCCESS) {
+                    qWarning("JxlDecoderSetCms ERROR");
+                }
+            } else {
+                qWarning("No JPEG XL CMS Interface");
             }
-        } else {
-            qWarning("No JPEG XL CMS Interface");
         }
 #endif
 
-        bool is_gray = m_basicinfo.num_color_channels == 1 && m_basicinfo.alpha_bits == 0;
         JxlColorEncoding color_encoding;
         JxlColorEncodingSetToSRGB(&color_encoding, is_gray ? JXL_TRUE : JXL_FALSE);
         JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
