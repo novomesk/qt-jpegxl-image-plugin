@@ -1,11 +1,12 @@
 version: 0.9.0.{build}
 image: Visual Studio 2022
-environment:
-  CC: cl.exe
-  CXX: cl.exe
 install:
 - cmd: >-
     call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+    set CC=clang-cl
+
+    set CXX=clang-cl
 
     git clone --depth 1 -b v0.12.x https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
 
