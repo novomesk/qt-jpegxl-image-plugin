@@ -12,6 +12,20 @@ install:
 
     cd libjxl
 
+    cd third_party\brotli
+
+    git fetch origin v1.2
+
+    git checkout db24a98aed38a16de78cc05ca15cdd8dc2a0d92d
+
+    cd ..\highway
+
+    git fetch origin 1.4.0
+
+    git checkout 2607d3b5b0113992fe84d3848859eae13b3b52c1
+
+    cd ..\..
+
     mkdir build
 
     cd build
