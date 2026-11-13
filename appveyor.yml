@@ -1,4 +1,4 @@
-version: 0.9.1.{build}
+version: 0.9.2.{build}
 image: Visual Studio 2022
 install:
 - cmd: >-
@@ -8,17 +8,11 @@ install:
 
     set CXX=clang-cl
 
-    git clone --depth 1 -b v0.12.x https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
+    git clone --depth 1 -b v0.13.x https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
 
     cd libjxl
 
-    cd third_party\brotli
-
-    git fetch origin v1.2
-
-    git checkout db24a98aed38a16de78cc05ca15cdd8dc2a0d92d
-
-    cd ..\highway
+    cd third_party\highway
 
     git fetch origin 1.4.0
 
